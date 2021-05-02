@@ -73,6 +73,7 @@ def write_to_csv():
         file_writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC)
         file_writer.writerows(get_data())
 
+
 #  c. Проверить работу программы через вызов функции write_to_csv().
 
 write_to_csv()
