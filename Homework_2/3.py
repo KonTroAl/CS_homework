@@ -10,7 +10,7 @@ my_dict = {'key_1': [1, 2, 3], 'key_2': 125, 'key_3': {'sub_dict_key': '120€'}
 # с помощью параметра default_flow_style, а также установить возможность работы с юникодом: allow_unicode = True;
 
 with open('file.yaml', 'w') as f:
-    yaml.dump(my_dict, f, default_flow_style=False, allow_unicode = True)
+    yaml.dump(my_dict, f, default_flow_style=False, allow_unicode=True)
 
 # c. Реализовать считывание данных из созданного файла и проверить, совпадают ли они с исходными.
 
