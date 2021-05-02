@@ -9,8 +9,7 @@ import json
 def write_order_to_json():
     item = "iphone"
     quantity = 5
-    # цена указана в рублях
-    price = 120000
+    price = 120000 # цена указана в рублях
     buyer = "Troshenkin_KA"
     date = "02.05.2021"
 
