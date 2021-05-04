@@ -8,7 +8,7 @@
 #         * port — tcp-порт на сервере, по умолчанию 7777.
 
 from socket import *
-import datetime, time
+import time
 import pickle
 
 timestamp = int(time.time())
@@ -20,6 +20,7 @@ users = {
 }
 
 authenticate = True
+presence = True
 
 if authenticate:
     dict_auth = {
@@ -33,4 +34,6 @@ if authenticate:
     s.send(pickle.dumps(dict_auth))
     data = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data), ', длиной ', len(data), ' байт')
-    s.close()
+
+s.close()
+
