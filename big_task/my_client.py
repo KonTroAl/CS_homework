@@ -16,14 +16,13 @@ s = socket(AF_INET, SOCK_STREAM)
 s.connect(('localhost', 8007))
 
 users = {
-    'KonTroAll': 'SpaceShip007',
-    'Julia': 'SpaceShuttle008'
+    'KonTroAll': 'SpaceShip007'
 }
 
-usernames = ['KonTroAll', 'Julia']
+usernames = ['KonTroAll']
 
 dict_signals = {
-    100: 'welckome!',
+    100: 'welcome!',
     101: 'do not come here!',
     200: 'OOK!',
     201: 'created',
@@ -55,11 +54,11 @@ if authenticate:
             }
         }
         s.send(pickle.dumps(dict_auth))
-    data = s.recv(1024)
-    load_data = pickle.loads(data)
-    print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
-    if load_data['response'] == 200:
-        presence = True
+        data = s.recv(1024)
+        load_data = pickle.loads(data)
+        print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
+        if load_data['response'] == 200:
+            presence = True
 
     # Проверка сигнала 409
 if signal_409:
@@ -90,6 +89,20 @@ if presence:
         }
     }
     s.send(pickle.dumps(presence_dict))
+
+if user_user:
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': 'Julia',
+        'from': 'KonTroAll',
+        'encoding': 'utf-8',
+        'message': 'Привет!'
+    }
+    s.send(pickle.dumps(message_dict))
+    print('message send!')
+    data_msg = s.recv(1024)
+    print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
 
 quit_data = s.recv(1024)

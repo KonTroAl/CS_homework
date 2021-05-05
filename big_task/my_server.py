@@ -18,13 +18,12 @@ timestamp = int(time.time())
 
 users = {
     'KonTroAll': 'SpaceShip007',
-    'Julia': 'SpaceShuttle008'
 }
 
-usernames = ['KonTroAll', 'Julia']
+usernames_friends = ['Julia']
 
 dict_signals = {
-    100: 'welckome!',
+    100: 'welcome!',
     101: 'do not come here!',
     200: 'OOK!',
     201: 'created',
@@ -45,7 +44,6 @@ while True:
     client, addr = s.accept()
     data = client.recv(1024)
     client_data = pickle.loads(data)
-    num_users = len(usernames)
 
     if client_data['action'] == 'authenticate' and presence == False:
         user = client_data['user']
@@ -58,9 +56,7 @@ while True:
                     }
                     print('authenticate completed!')
                     client.send(pickle.dumps(dict_auth_response))
-                    num_users = num_users - 1
-                    if num_users > 0:
-                        presence = True
+                    presence = True
                     break
                 else:
                     dict_auth_response = {
@@ -86,6 +82,25 @@ while True:
         client.send(pickle.dumps(dict_probe))
         presence_data = client.recv(1024)
         print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
+
+    msg_data = pickle.loads(client.recv(1024))
+    if msg_data['action'] == 'msg':
+        for i in usernames_friends:
+            if msg_data['to'] == i:
+                msg_dict = {
+                    'response': 200,
+                    'time': timestamp,
+                    'alert': 'message received'
+                }
+                client.send(pickle.dumps(msg_dict))
+            else:
+                msg_dict = {
+                    'response': 404,
+                    'time': timestamp,
+                    'alert': 'пользователь/чат отсутствует на сервере'
+                }
+                client.send(pickle.dumps(msg_dict))
+
 
     client.send(pickle.dumps({'action': 'quit'}))
     client.close()
