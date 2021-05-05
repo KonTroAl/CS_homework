@@ -7,7 +7,8 @@
 #         * addr — ip-адрес сервера;
 #         * port — tcp-порт на сервере, по умолчанию 7777.
 
-from socket import *
+
+from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
 
@@ -41,6 +42,7 @@ authenticate = True
 presence = False
 signal_409 = False
 user_user = True
+user_all = True
 
 # Авторизация пользователя на сервере
 if authenticate:
@@ -75,7 +77,6 @@ if signal_409:
     load_data_2 = pickle.loads(data_2)
     print('Сообщение от сервера: ', load_data_2, ', длиной ', len(data_2), ' байт')
 
-
 if presence:
     probe_data = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
@@ -104,6 +105,19 @@ if user_user:
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
+if user_all:
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': '#smalltalk',
+        'from': 'KonTroAll',
+        'encoding': 'utf-8',
+        'message': 'Привет!'
+    }
+    s.send(pickle.dumps(message_dict))
+    print('message send!')
+    data_msg = s.recv(1024)
+    print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
 quit_data = s.recv(1024)
 print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт')

@@ -7,7 +7,7 @@
 #         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 
 
-from socket import *
+from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
 
@@ -21,6 +21,7 @@ users = {
 }
 
 usernames_friends = ['Julia']
+room_names = ['#smalltalk']
 
 dict_signals = {
     100: 'welcome!',
@@ -85,22 +86,38 @@ while True:
 
     msg_data = pickle.loads(client.recv(1024))
     if msg_data['action'] == 'msg':
-        for i in usernames_friends:
-            if msg_data['to'] == i:
-                msg_dict = {
-                    'response': 200,
-                    'time': timestamp,
-                    'alert': 'message received'
-                }
-                client.send(pickle.dumps(msg_dict))
-            else:
-                msg_dict = {
-                    'response': 404,
-                    'time': timestamp,
-                    'alert': 'пользователь/чат отсутствует на сервере'
-                }
-                client.send(pickle.dumps(msg_dict))
-
+        if list(msg_data['to'])[0].isalpha():
+            for i in usernames_friends:
+                if msg_data['to'] == i:
+                    msg_dict = {
+                        'response': 200,
+                        'time': timestamp,
+                        'alert': 'message received'
+                    }
+                    client.send(pickle.dumps(msg_dict))
+                else:
+                    msg_dict = {
+                        'response': 404,
+                        'time': timestamp,
+                        'alert': 'пользователь/чат отсутствует на сервере'
+                    }
+                    client.send(pickle.dumps(msg_dict))
+        else:
+            for i in room_names:
+                if i == msg_data['to']:
+                    room_dict = {
+                        'response': 200,
+                        'time': timestamp,
+                        'alert': 'message received'
+                    }
+                    client.send(pickle.dumps(room_dict))
+                else:
+                    room_dict = {
+                        'response': 404,
+                        'time': timestamp,
+                        'alert': 'пользователь/чат отсутствует на сервере'
+                    }
+                    client.send(pickle.dumps(room_dict))
 
     client.send(pickle.dumps({'action': 'quit'}))
     client.close()
