@@ -16,13 +16,53 @@ s = socket(AF_INET, SOCK_STREAM)
 s.connect(('localhost', 8007))
 
 users = {
-    'KonTroAll': 'SpaceShip007'
+    'KonTroAll': 'SpaceShip007',
+    'Julia': 'SpaceShuttle008'
+}
+
+usernames = ['KonTroAll', 'Julia']
+
+dict_signals = {
+    100: 'welckome!',
+    101: 'do not come here!',
+    200: 'OOK!',
+    201: 'created',
+    202: 'accepted',
+    400: 'неправильный запрос/JSON-объект',
+    401: 'не авторизован',
+    402: 'неправильный логин/пароль',
+    403: 'пользователь заблокирован',
+    404: 'пользователь/чат отсутствует на сервере',
+    409: 'уже имеется подключение с указанным логином',
+    410: 'адресат существует, но недоступен (offline)',
+    500: 'ошибка сервера'
 }
 
 authenticate = True
 presence = False
+signal_409 = False
+user_user = True
 
+# Авторизация пользователя на сервере
 if authenticate:
+    for i in usernames:
+        dict_auth = {
+            'action': 'authenticate',
+            'time': timestamp,
+            'user': {
+                'user_name': i,
+                'password': users[i]
+            }
+        }
+        s.send(pickle.dumps(dict_auth))
+    data = s.recv(1024)
+    load_data = pickle.loads(data)
+    print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
+    if load_data['response'] == 200:
+        presence = True
+
+    # Проверка сигнала 409
+if signal_409:
     dict_auth = {
         'action': 'authenticate',
         'time': timestamp,
@@ -32,11 +72,10 @@ if authenticate:
         }
     }
     s.send(pickle.dumps(dict_auth))
-    data = s.recv(1024)
-    load_data = pickle.loads(data)
-    print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
-    if load_data['response'] == 200:
-        presence = True
+    data_2 = s.recv(1024)
+    load_data_2 = pickle.loads(data_2)
+    print('Сообщение от сервера: ', load_data_2, ', длиной ', len(data_2), ' байт')
+
 
 if presence:
     probe_data = s.recv(1024)
@@ -51,4 +90,8 @@ if presence:
         }
     }
     s.send(pickle.dumps(presence_dict))
+
+
+quit_data = s.recv(1024)
+print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт')
 s.close()

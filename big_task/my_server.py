@@ -7,7 +7,6 @@
 #         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 
 
-
 from socket import *
 import time
 import pickle
@@ -18,15 +17,35 @@ s.listen(5)
 timestamp = int(time.time())
 
 users = {
-    'KonTroAll': 'SpaceShip007'
+    'KonTroAll': 'SpaceShip007',
+    'Julia': 'SpaceShuttle008'
 }
+
+usernames = ['KonTroAll', 'Julia']
+
+dict_signals = {
+    100: 'welckome!',
+    101: 'do not come here!',
+    200: 'OOK!',
+    201: 'created',
+    202: 'accepted',
+    400: 'неправильный запрос/JSON-объект',
+    401: 'не авторизован',
+    402: 'неправильный логин/пароль',
+    403: 'пользователь заблокирован',
+    404: 'пользователь/чат отсутствует на сервере',
+    409: 'уже имеется подключение с указанным логином',
+    410: 'адресат существует, но недоступен (offline)',
+    500: 'ошибка сервера'
+}
+
 presence = False
 
 while True:
     client, addr = s.accept()
     data = client.recv(1024)
     client_data = pickle.loads(data)
-
+    num_users = len(usernames)
 
     if client_data['action'] == 'authenticate' and presence == False:
         user = client_data['user']
@@ -38,8 +57,10 @@ while True:
                         'alert': 'authenticate completed!'
                     }
                     print('authenticate completed!')
-                    presence = True
                     client.send(pickle.dumps(dict_auth_response))
+                    num_users = num_users - 1
+                    if num_users > 0:
+                        presence = True
                     break
                 else:
                     dict_auth_response = {
@@ -57,7 +78,6 @@ while True:
         print('error!')
         client.send(pickle.dumps(dict_auth_response))
 
-
     if presence:
         dict_probe = {
             'action': 'probe',
@@ -67,6 +87,5 @@ while True:
         presence_data = client.recv(1024)
         print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
 
-
+    client.send(pickle.dumps({'action': 'quit'}))
     client.close()
-
