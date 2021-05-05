@@ -7,6 +7,7 @@
 #         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 
 
+
 from socket import *
 import time
 import pickle
@@ -27,7 +28,7 @@ while True:
     client_data = pickle.loads(data)
 
 
-    if client_data['action'] == 'authenticate':
+    if client_data['action'] == 'authenticate' and presence == False:
         user = client_data['user']
         for us, pas in users.items():
             for val in user.values():
@@ -48,6 +49,14 @@ while True:
                     print('error!')
                     client.send(pickle.dumps(dict_auth_response))
                     break
+    else:
+        dict_auth_response = {
+            'response': 409,
+            'error': 'Someone is already connected with the given user name'
+        }
+        print('error!')
+        client.send(pickle.dumps(dict_auth_response))
+
 
     if presence:
         dict_probe = {
@@ -55,7 +64,9 @@ while True:
             'time': timestamp
         }
         client.send(pickle.dumps(dict_probe))
+        presence_data = client.recv(1024)
+        print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
 
-    client.send(pickle.dumps({'action': 'close'}))
+
     client.close()
 
