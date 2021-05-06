@@ -39,7 +39,7 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-authenticate = False
+authenticate = True
 presence = False
 user_user = True
 user_all = True
