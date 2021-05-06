@@ -102,22 +102,24 @@ while True:
                         'alert': 'пользователь/чат отсутствует на сервере'
                     }
                     client.send(pickle.dumps(msg_dict))
-        else:
-            for i in room_names:
-                if i == msg_data['to']:
-                    room_dict = {
-                        'response': 200,
-                        'time': timestamp,
-                        'alert': 'message received'
-                    }
-                    client.send(pickle.dumps(room_dict))
-                else:
-                    room_dict = {
-                        'response': 404,
-                        'time': timestamp,
-                        'alert': 'пользователь/чат отсутствует на сервере'
-                    }
-                    client.send(pickle.dumps(room_dict))
+
+    msg_for_room_data = pickle.loads(client.recv(1024))
+    if msg_for_room_data['action'] == 'msg':
+        for i in room_names:
+            if i == msg_for_room_data['to']:
+                room_dict = {
+                    'response': 200,
+                    'time': timestamp,
+                    'alert': 'message received'
+                }
+                client.send(pickle.dumps(room_dict))
+            else:
+                room_dict = {
+                    'response': 404,
+                    'time': timestamp,
+                    'alert': 'пользователь/чат отсутствует на сервере'
+                }
+                client.send(pickle.dumps(room_dict))
 
     client.send(pickle.dumps({'action': 'quit'}))
     client.close()
