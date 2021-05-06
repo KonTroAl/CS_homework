@@ -39,10 +39,10 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-authenticate = True
+authenticate = False
 presence = False
 user_user = True
-user_all = False
+user_all = True
 
 # вход на сервер
 welcome_data = s.recv(1024)
@@ -96,6 +96,7 @@ if user_user:
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
+
 # Отправка сообщения в чат
 if user_all:
     message_dict = {
@@ -111,14 +112,16 @@ if user_all:
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
+
 # logout
-dict_logout = {
-    'action': 'logout',
-    'response': 102,
-    'alert': dict_signals[102]
-}
-s.send(pickle.dumps(dict_logout))
-print('logout')
+if authenticate:
+    dict_logout = {
+        'action': 'logout',
+        'response': 102,
+        'alert': dict_signals[102]
+    }
+    s.send(pickle.dumps(dict_logout))
+    print('logout')
 
 # отключение от сервера
 quit_data = s.recv(1024)
