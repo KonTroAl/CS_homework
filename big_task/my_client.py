@@ -25,6 +25,7 @@ usernames = ['KonTroAll']
 dict_signals = {
     100: 'welcome!',
     101: 'do not come here!',
+    102: 'logout',
     200: 'OOK!',
     201: 'created',
     202: 'accepted',
@@ -40,9 +41,12 @@ dict_signals = {
 
 authenticate = True
 presence = False
-signal_409 = False
 user_user = True
-user_all = True
+user_all = False
+
+# вход на сервер
+welcome_data = s.recv(1024)
+print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
 # Авторизация пользователя на сервере
 if authenticate:
@@ -59,24 +63,10 @@ if authenticate:
         data = s.recv(1024)
         load_data = pickle.loads(data)
         print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
-        if load_data['response'] == 200:
+        if load_data['response'] == 200 or 409:
             presence = True
 
-    # Проверка сигнала 409
-if signal_409:
-    dict_auth = {
-        'action': 'authenticate',
-        'time': timestamp,
-        'user': {
-            'user_name': 'KonTroAll',
-            'password': users['KonTroAll']
-        }
-    }
-    s.send(pickle.dumps(dict_auth))
-    data_2 = s.recv(1024)
-    load_data_2 = pickle.loads(data_2)
-    print('Сообщение от сервера: ', load_data_2, ', длиной ', len(data_2), ' байт')
-
+# Проверка присутствия пользователя
 if presence:
     probe_data = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
@@ -91,6 +81,7 @@ if presence:
     }
     s.send(pickle.dumps(presence_dict))
 
+# Отправка сообщения другому пользователю
 if user_user:
     message_dict = {
         'action': 'msg',
@@ -101,10 +92,11 @@ if user_user:
         'message': 'Привет!'
     }
     s.send(pickle.dumps(message_dict))
-    print('message send!')
+    print('message send to user!')
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
+# Отправка сообщения в чат
 if user_all:
     message_dict = {
         'action': 'msg',
@@ -119,6 +111,16 @@ if user_all:
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
+# logout
+dict_logout = {
+    'action': 'logout',
+    'response': 102,
+    'alert': dict_signals[102]
+}
+s.send(pickle.dumps(dict_logout))
+print('logout')
+
+# отключение от сервера
 quit_data = s.recv(1024)
 print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт')
 s.close()
