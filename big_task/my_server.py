@@ -41,8 +41,8 @@ dict_signals = {
 
 authenticate = True
 presence = False
-user_user = True
-user_all = True
+user_user = False
+user_all = False
 
 while True:
     client, addr = s.accept()

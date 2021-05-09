@@ -12,6 +12,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
 
+
 timestamp = int(time.time())
 s = socket(AF_INET, SOCK_STREAM)
 s.connect(('localhost', 8007))
@@ -41,30 +42,39 @@ dict_signals = {
 
 authenticate = True
 presence = False
-user_user = True
-user_all = True
+user_user = False
+user_all = False
 
 # вход на сервер
 welcome_data = s.recv(1024)
 print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
+
 # Авторизация пользователя на сервере
+# if authenticate:
+def user_authenticate(username, password):
+    dict_auth = {
+        'action': 'authenticate',
+        'time': timestamp,
+        'user': {
+            'user_name': username,
+            'password': password
+        }
+    }
+    s.send(pickle.dumps(dict_auth))
+    data = s.recv(1024)
+    load_data = pickle.loads(data)
+    print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
+    return load_data['response']
+
+
+
 if authenticate:
     for i in usernames:
-        dict_auth = {
-            'action': 'authenticate',
-            'time': timestamp,
-            'user': {
-                'user_name': i,
-                'password': users[i]
-            }
-        }
-        s.send(pickle.dumps(dict_auth))
-        data = s.recv(1024)
-        load_data = pickle.loads(data)
-        print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
-        if load_data['response'] == 200 or 409:
+        response = user_authenticate(i, users[i])
+        if response == 200 or 409:
             presence = True
+
 
 # Проверка присутствия пользователя
 if presence:
@@ -96,7 +106,6 @@ if user_user:
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
 
-
 # Отправка сообщения в чат
 if user_all:
     message_dict = {
@@ -111,7 +120,6 @@ if user_all:
     print('message send!')
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
-
 
 # logout
 if authenticate:
