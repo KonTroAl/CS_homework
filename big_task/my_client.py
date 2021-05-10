@@ -149,4 +149,9 @@ if my_test:
     s.connect(('localhost', 8007))
     welcome_data = s.recv(1024)
 
-    quit_data= s.recv(1024)
+    #Если убрать переменную presence_data выводит ошибку об несоответствии ключа, где
+    # data_msg_load['response'] == None, т.к. он подягивает словарь с probe сообщением
+    # а при добавлении presence_data процесс останавливается и тесты не выполняются
+    # сервер либо клиент чего-то ждет, но я никак не могу понять чего именно
+    #
+    presence_data= s.recv(1024)
