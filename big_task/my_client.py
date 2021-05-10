@@ -97,19 +97,24 @@ if presence:
     s.send(pickle.dumps(presence_dict))
 
 # Отправка сообщения другому пользователю
+def message_to_user(user_1, user_2, message):
+    if user_user:
+        message_dict = {
+            'action': 'msg',
+            'time': timestamp,
+            'to': user_2,
+            'from': user_1,
+            'encoding': 'utf-8',
+            'message': message
+        }
+        s.send(pickle.dumps(message_dict))
+        print('message send to user!')
+        data_msg = s.recv(1024)
+        print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
+        return pickle.loads(data_msg)['response']
+
 if user_user:
-    message_dict = {
-        'action': 'msg',
-        'time': timestamp,
-        'to': 'Julia',
-        'from': 'KonTroAll',
-        'encoding': 'utf-8',
-        'message': 'Привет!'
-    }
-    s.send(pickle.dumps(message_dict))
-    print('message send to user!')
-    data_msg = s.recv(1024)
-    print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
+    message_to_user('KonTroAll', 'Julia', 'Hello world!')
 
 # Отправка сообщения в чат
 if user_all:
