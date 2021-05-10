@@ -11,11 +11,7 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
-
-
-timestamp = int(time.time())
-s = socket(AF_INET, SOCK_STREAM)
-s.connect(('localhost', 8007))
+import unittest
 
 users = {
     'KonTroAll': 'SpaceShip007'
@@ -40,10 +36,21 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
+
+
+
 authenticate = True
 presence = False
 user_user = False
 user_all = False
+my_test = True
+
+num = 1
+
+
+timestamp = int(time.time())
+s = socket(AF_INET, SOCK_STREAM)
+s.connect(('localhost', 8007))
 
 # вход на сервер
 welcome_data = s.recv(1024)
@@ -51,7 +58,6 @@ print('Сообщение от сервера: ', pickle.loads(welcome_data), ',
 
 
 # Авторизация пользователя на сервере
-# if authenticate:
 def user_authenticate(username, password):
     dict_auth = {
         'action': 'authenticate',
@@ -69,14 +75,13 @@ def user_authenticate(username, password):
 
 
 
-if authenticate:
-    for i in usernames:
-        response = user_authenticate(i, users[i])
-        if response == 200 or 409:
-            presence = True
-
+for i in usernames:
+    response = user_authenticate(i, users[i])
+    if response == 200 or 409:
+        presence = True
 
 # Проверка присутствия пользователя
+
 if presence:
     probe_data = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
@@ -133,5 +138,15 @@ if authenticate:
 
 # отключение от сервера
 quit_data = s.recv(1024)
-print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт')
+print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт \n')
+
 s.close()
+
+if my_test:
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect(('localhost', 8007))
+    welcome_data = s.recv(1024)
+
+    # probe_data = s.recv(1024)
+    # quit_data = s.recv(1024)
+
