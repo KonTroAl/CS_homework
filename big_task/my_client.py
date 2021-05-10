@@ -36,17 +36,13 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-
-
-
 authenticate = True
 presence = False
-user_user = False
-user_all = False
+user_user = True
+user_all = True
 my_test = True
 
 num = 1
-
 
 timestamp = int(time.time())
 s = socket(AF_INET, SOCK_STREAM)
@@ -74,7 +70,6 @@ def user_authenticate(username, password):
     return load_data['response']
 
 
-
 for i in usernames:
     response = user_authenticate(i, users[i])
     if response == 200 or 409:
@@ -96,22 +91,24 @@ if presence:
     }
     s.send(pickle.dumps(presence_dict))
 
+
 # Отправка сообщения другому пользователю
 def message_to_user(user_1, user_2, message):
-    if user_user:
-        message_dict = {
-            'action': 'msg',
-            'time': timestamp,
-            'to': user_2,
-            'from': user_1,
-            'encoding': 'utf-8',
-            'message': message
-        }
-        s.send(pickle.dumps(message_dict))
-        print('message send to user!')
-        data_msg = s.recv(1024)
-        print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
-        return pickle.loads(data_msg)['response']
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': user_2,
+        'from': user_1,
+        'encoding': 'utf-8',
+        'message': message
+    }
+    s.send(pickle.dumps(message_dict))
+    print('message send to user!')
+    data_msg = s.recv(1024)
+    data_msg_load = pickle.loads(data_msg)
+    print('Сообщение от сервера: ', data_msg_load, ', длиной ', len(data_msg), ' байт')
+    return data_msg_load['response']
+
 
 if user_user:
     message_to_user('KonTroAll', 'Julia', 'Hello world!')
@@ -152,6 +149,4 @@ if my_test:
     s.connect(('localhost', 8007))
     welcome_data = s.recv(1024)
 
-    # probe_data = s.recv(1024)
-    # quit_data = s.recv(1024)
-
+    quit_data= s.recv(1024)

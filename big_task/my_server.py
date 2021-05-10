@@ -41,8 +41,9 @@ dict_signals = {
 
 authenticate = True
 presence = False
-user_user = False
-user_all = False
+user_user = True
+user_all = True
+
 
 while True:
     client, addr = s.accept()
@@ -91,8 +92,9 @@ while True:
             signal_409 = True
             client.send(pickle.dumps(dict_auth_response))
 
+
     # Проверка присутствия пользователя
-    if presence:
+    def presence_user():
         dict_probe = {
             'action': 'probe',
             'time': timestamp
@@ -100,6 +102,11 @@ while True:
         client.send(pickle.dumps(dict_probe))
         presence_data = client.recv(1024)
         print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
+        return dict_probe['action']
+
+    if presence:
+        presence_user()
+
 
     # Отправка сообщения другому пользователю
     if user_user:
@@ -125,8 +132,8 @@ while True:
         else:
             msg_data = pickle.loads(client.recv(1024))
             dict_not_auth = {
-            'response': 401,
-            'alert': dict_signals[401]
+                'response': 401,
+                'alert': dict_signals[401]
             }
             client.send(pickle.dumps(dict_not_auth))
 
@@ -164,4 +171,9 @@ while True:
 
     # отключение от сервера
     client.send(pickle.dumps({'action': 'quit'}))
+
+
     client.close()
+
+
+
