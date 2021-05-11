@@ -18,6 +18,7 @@ users = {
 }
 
 usernames = ['KonTroAll']
+room_names = ['#smalltalk']
 
 dict_signals = {
     100: 'welcome!',
@@ -39,9 +40,8 @@ dict_signals = {
 authenticate = True
 presence = False
 user_user = True
-user_all = False
+user_all = True
 my_test = True
-
 
 timestamp = int(time.time())
 s = socket(AF_INET, SOCK_STREAM)
@@ -76,7 +76,7 @@ for i in usernames:
 
 # Проверка присутствия пользователя
 
-if presence:
+def user_presence():
     probe_data = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
     presence_dict = {
@@ -89,7 +89,10 @@ if presence:
         }
     }
     s.send(pickle.dumps(presence_dict))
+    return pickle.loads(probe_data)['action']
 
+if presence:
+    print(user_presence())
 
 # Отправка сообщения другому пользователю
 def message_to_user(user_1, user_2, message):
@@ -112,20 +115,26 @@ def message_to_user(user_1, user_2, message):
 if user_user:
     message_to_user('KonTroAll', 'Julia', 'Hello world!')
 
+
 # Отправка сообщения в чат
-if user_all:
+def message_to_all(user, room_name, message):
     message_dict = {
         'action': 'msg',
         'time': timestamp,
-        'to': '#smalltalk',
-        'from': 'KonTroAll',
+        'to': room_name,
+        'from': user,
         'encoding': 'utf-8',
-        'message': 'Привет!'
+        'message': message
     }
     s.send(pickle.dumps(message_dict))
     print('message send!')
     data_msg = s.recv(1024)
     print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
+    return pickle.loads(data_msg)['response']
+
+
+if user_all:
+    message_to_all('KonTroAll', '#smalltalk', 'Hello world!')
 
 # logout
 if authenticate:
@@ -147,7 +156,7 @@ if my_test:
     s = socket(AF_INET, SOCK_STREAM)
     s.connect(('localhost', 8007))
     welcome_data = s.recv(1024)
-
-    presence_data= s.recv(1024)
-    quit_data= s.recv(1024)
+    #
+    # data = s.recv(1024)
+    # quit_data= s.recv(1024)
 
