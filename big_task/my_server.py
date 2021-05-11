@@ -42,8 +42,8 @@ dict_signals = {
 authenticate = True
 presence = False
 user_user = True
-user_all = True
-
+user_all = False
+my_test = True
 
 while True:
     client, addr = s.accept()
@@ -104,9 +104,9 @@ while True:
         print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
         return dict_probe['action']
 
+
     if presence:
         presence_user()
-
 
     # Отправка сообщения другому пользователю
     if user_user:
@@ -172,8 +172,4 @@ while True:
     # отключение от сервера
     client.send(pickle.dumps({'action': 'quit'}))
 
-
     client.close()
-
-
-
