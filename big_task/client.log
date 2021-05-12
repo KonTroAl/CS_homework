@@ -1,5 +1,5 @@
 2021-05-12 21:07:26,694 INFO my_client  start connection
-2021-05-12 21:07:26,698 INFO my_client  РІС…РѕРґ РЅР° СЃРµСЂРІРµСЂ
+2021-05-12 21:07:26,698 INFO my_client  вход на сервер
 2021-05-12 21:07:26,698 INFO my_client  start user_authenticate
 2021-05-12 21:07:26,699 INFO my_client  start user_presence
 2021-05-12 21:07:26,699 INFO my_client  start message_to_user

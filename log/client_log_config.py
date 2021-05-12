@@ -10,18 +10,20 @@
 import logging
 
 logging.basicConfig(
-    filename='my_client.log',
+    filename='client.log',
     format = "%(asctime)s %(levelname)s %(module)-10s %(message)s",
-    level= logging.INFO
+    level= logging.DEBUG
 )
 
 logger = logging.getLogger('my_client')
 
-# Создание обработчкиов
-# client_hand = logging.FileHandler('my_client.log', encoding='utf-8')
-# client_hand.setLevel(logging.INFO)
-#
-# logger.addHandler(client_hand)
+# Создание обработчиков
+format = logging.Formatter("%(asctime)s %(levelname)s %(module)-10s %(message)s")
+client_hand = logging.FileHandler('my_client.log', encoding='utf-8')
+client_hand.setLevel(logging.INFO)
+client_hand.setFormatter(format)
+
+logger.addHandler(client_hand)
 
 if __name__ == '__main__':
     # Создаем потоковый обработчик логирования (по умолчанию sys.stderr):
