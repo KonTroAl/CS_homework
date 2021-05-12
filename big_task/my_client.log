@@ -1,0 +1,9 @@
+
+2021-05-12 21:01:25,755 INFO my_client  start connection
+2021-05-12 21:01:25,760 INFO my_client  вход на сервер
+2021-05-12 21:01:25,760 INFO my_client  start user_authenticate
+2021-05-12 21:01:25,761 INFO my_client  start user_presence
+2021-05-12 21:01:25,761 INFO my_client  start message_to_user
+2021-05-12 21:01:25,761 INFO my_client  start message_to_all
+2021-05-12 21:01:25,761 INFO my_client  logout from server
+2021-05-12 21:01:25,761 INFO my_client  server quit

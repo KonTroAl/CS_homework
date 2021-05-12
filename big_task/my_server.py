@@ -44,10 +44,10 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-authenticate = False
-presence = False
-user_user = False
-user_all = False
+authenticate = True
+presence = True
+user_user = True
+user_all = True
 
 while True:
     if my_test:
