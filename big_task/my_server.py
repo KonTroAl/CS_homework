@@ -7,16 +7,16 @@
 #         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 
 
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import time
 import pickle
 
 # Для проведения теста функций установить значение переменной my_test = True
-my_test = True
+my_test = False
 
-# if my_test == False:
 s = socket(AF_INET, SOCK_STREAM)
 s.bind(('', 8007))
+s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 s.listen(5)
 
 timestamp = int(time.time())
@@ -44,10 +44,10 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-authenticate = True
+authenticate = False
 presence = False
-user_user = True
-user_all = True
+user_user = False
+user_all = False
 
 while True:
     if my_test:
@@ -62,6 +62,7 @@ while True:
         'alert': dict_signals[100]
     }
     client.send(pickle.dumps(dict_welcome))
+
 
     # Авторизация пользователя на сервере
     if authenticate:
