@@ -56,9 +56,9 @@ try:
 
 
     # вход на сервер
-    logger.info('вход на сервер')
     welcome_data = s.recv(1024)
-    print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
+    logger.info(pickle.loads(welcome_data))
+    # print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
 
     # Авторизация пользователя на сервере
@@ -76,6 +76,7 @@ try:
         data = s.recv(1024)
         load_data = pickle.loads(data)
 
+        logger.info(load_data)
         print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
         return load_data['response']
 
@@ -90,7 +91,8 @@ try:
     def user_presence():
         logger.info('start user_presence')
         probe_data = s.recv(1024)
-        print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
+        logger.info(pickle.loads(probe_data))
+        # print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
         presence_dict = {
             'action': 'presence',
             'time': timestamp,
@@ -121,7 +123,8 @@ try:
         print('message send to user!')
         data_msg = s.recv(1024)
         data_msg_load = pickle.loads(data_msg)
-        print('Сообщение от сервера: ', data_msg_load, ', длиной ', len(data_msg), ' байт')
+        logger.info(data_msg_load)
+        # print('Сообщение от сервера: ', data_msg_load, ', длиной ', len(data_msg), ' байт')
         return data_msg_load['response']
 
 
@@ -143,7 +146,8 @@ try:
         s.send(pickle.dumps(message_dict))
         print('message send!')
         data_msg = s.recv(1024)
-        print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
+        logger.info(pickle.loads(data_msg))
+        # print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
         return pickle.loads(data_msg)['response']
 
 

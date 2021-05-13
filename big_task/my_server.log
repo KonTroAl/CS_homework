@@ -1,0 +1,15 @@
+2021-05-13 19:00:29,548 INFO my_server  server starts
+2021-05-13 19:00:34,100 INFO my_server  start connection with user
+2021-05-13 19:00:34,100 INFO my_server  start user_authenticate
+2021-05-13 19:00:34,100 INFO my_server  Someone is already connected with the given user name!
+2021-05-13 19:00:34,101 INFO my_server  start user_presence
+2021-05-13 19:00:34,101 INFO my_server  get data from user
+2021-05-13 19:00:34,101 INFO my_server  start message_to_user
+2021-05-13 19:00:34,101 INFO my_server  message send
+2021-05-13 19:00:34,101 INFO my_server  start message_to_all
+2021-05-13 19:00:34,101 INFO my_server  message send
+2021-05-13 19:00:34,102 INFO my_server  logout from server
+2021-05-13 19:00:34,102 INFO my_server  server quit
+2021-05-13 19:10:33,742 INFO my_server  server starts
+2021-05-13 19:10:51,451 INFO my_server  server starts
+2021-05-13 20:20:01,666 INFO my_server  server starts

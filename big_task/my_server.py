@@ -5,20 +5,24 @@
 #     - имеет параметры командной строки:
 #         * -p <port> — TCP-порт для работы (по умолчанию использует 7777);
 #         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
-
-
+import logging
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import time
 import pickle
+import logging
+import log.server_log_config
 
 # Для проведения теста функций установить значение переменной my_test = True
 my_test = False
+
+logger = logging.getLogger('my_server')
 
 s = socket(AF_INET, SOCK_STREAM)
 s.bind(('', 8007))
 s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 s.listen(5)
 
+logger.info('server starts')
 timestamp = int(time.time())
 
 users = {
@@ -49,139 +53,157 @@ presence = True
 user_user = True
 user_all = True
 
-while True:
-    if my_test:
-        break
+try:
+    while True:
+        if my_test:
+            break
 
-    client, addr = s.accept()
+        client, addr = s.accept()
 
-    # вход на сервер
-    dict_welcome = {
-        'action': 'join',
-        'response': 100,
-        'alert': dict_signals[100]
-    }
-    client.send(pickle.dumps(dict_welcome))
-
-
-    # Авторизация пользователя на сервере
-    if authenticate:
-        data = client.recv(1024)
-        client_data = pickle.loads(data)
-
-        if client_data['action'] == 'authenticate' and presence == False:
-            user = client_data['user']
-            for us, pas in users.items():
-                for val in user.values():
-                    if us == val and pas == user['password']:
-                        dict_auth_response = {
-                            'response': 200,
-                            'alert': dict_signals[200]
-                        }
-                        print('authenticate completed!')
-                        client.send(pickle.dumps(dict_auth_response))
-                        presence = True
-                        break
-                    else:
-                        dict_auth_response = {
-                            'response': 402,
-                            'error': dict_signals[402]
-                        }
-                        print('error!')
-                        client.send(pickle.dumps(dict_auth_response))
-                        break
-        else:
-            dict_auth_response = {
-                'response': 409,
-                'error': dict_signals[409]
-            }
-            print('Someone is already connected with the given user name!')
-            presence = True
-            signal_409 = True
-            client.send(pickle.dumps(dict_auth_response))
-
-
-    # Проверка присутствия пользователя
-    def presence_user():
-        dict_probe = {
-            'action': 'probe',
-            'time': timestamp
+        # вход на сервер
+        logger.info('start connection with user')
+        dict_welcome = {
+            'action': 'join',
+            'response': 100,
+            'alert': dict_signals[100]
         }
-        client.send(pickle.dumps(dict_probe))
-        presence_data = client.recv(1024)
-        print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
-        return pickle.loads(presence_data)['action']
+        client.send(pickle.dumps(dict_welcome))
 
-
-    if presence:
-        presence_user()
-
-    # Отправка сообщения другому пользователю
-    if user_user:
+        # Авторизация пользователя на сервере
         if authenticate:
-            msg_data = pickle.loads(client.recv(1024))
-            if msg_data['action'] == 'msg':
-                if list(msg_data['to'])[0].isalpha():
-                    for i in usernames_friends:
-                        if msg_data['to'] == i:
-                            msg_dict = {
+            logger.info('start user_authenticate')
+            data = client.recv(1024)
+            client_data = pickle.loads(data)
+
+            if client_data['action'] == 'authenticate' and presence == False:
+                user = client_data['user']
+                for us, pas in users.items():
+                    for val in user.values():
+                        if us == val and pas == user['password']:
+                            dict_auth_response = {
+                                'response': 200,
+                                'alert': dict_signals[200]
+                            }
+                            print('authenticate completed!')
+                            client.send(pickle.dumps(dict_auth_response))
+                            presence = True
+                            logger.info('authentication complete')
+                            break
+                        else:
+                            dict_auth_response = {
+                                'response': 402,
+                                'error': dict_signals[402]
+                            }
+                            print('error!')
+                            client.send(pickle.dumps(dict_auth_response))
+                            logger.info('authentication failed')
+                            break
+            else:
+                dict_auth_response = {
+                    'response': 409,
+                    'error': dict_signals[409]
+                }
+                print('Someone is already connected with the given user name!')
+                presence = True
+                signal_409 = True
+                client.send(pickle.dumps(dict_auth_response))
+                logger.info('Someone is already connected with the given user name!')
+
+
+        # Проверка присутствия пользователя
+        def presence_user():
+            logger.info('start user_presence')
+            dict_probe = {
+                'action': 'probe',
+                'time': timestamp
+            }
+            client.send(pickle.dumps(dict_probe))
+            presence_data = client.recv(1024)
+            print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
+            logger.info('get data from user')
+            return pickle.loads(presence_data)['action']
+
+
+        if presence:
+            presence_user()
+
+        # Отправка сообщения другому пользователю
+        if user_user:
+            if authenticate:
+                logger.info('start message_to_user')
+                msg_data = pickle.loads(client.recv(1024))
+                if msg_data['action'] == 'msg':
+                    if list(msg_data['to'])[0].isalpha():
+                        for i in usernames_friends:
+                            if msg_data['to'] == i:
+                                msg_dict = {
+                                    'response': 200,
+                                    'time': timestamp,
+                                    'alert': dict_signals[200]
+                                }
+                                client.send(pickle.dumps(msg_dict))
+                                logger.info('message send')
+                            else:
+                                msg_dict = {
+                                    'response': 404,
+                                    'time': timestamp,
+                                    'alert': dict_signals[404]
+                                }
+                                client.send(pickle.dumps(msg_dict))
+                                logger.info('пользователь/чат отсутствует на сервере')
+            else:
+                msg_data = pickle.loads(client.recv(1024))
+                dict_not_auth = {
+                    'response': 401,
+                    'alert': dict_signals[401]
+                }
+                client.send(pickle.dumps(dict_not_auth))
+                logger.info('неавторизованный пользователь отправил сообщение')
+
+        # Отправка сообщения в чат
+        if user_all:
+            if authenticate:
+                logger.info('start message_to_all')
+                msg_for_room_data = pickle.loads(client.recv(1024))
+                if msg_for_room_data['action'] == 'msg':
+                    for i in room_names:
+                        if i == msg_for_room_data['to']:
+                            room_dict = {
                                 'response': 200,
                                 'time': timestamp,
                                 'alert': dict_signals[200]
                             }
-                            client.send(pickle.dumps(msg_dict))
+                            client.send(pickle.dumps(room_dict))
+                            logger.info('message send')
                         else:
-                            msg_dict = {
+                            room_dict = {
                                 'response': 404,
                                 'time': timestamp,
                                 'alert': dict_signals[404]
                             }
-                            client.send(pickle.dumps(msg_dict))
-        else:
-            msg_data = pickle.loads(client.recv(1024))
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            client.send(pickle.dumps(dict_not_auth))
+                            client.send(pickle.dumps(room_dict))
+                            logger.info('пользователь/чат отсутствует на сервере')
+            else:
+                msg_for_room_data = pickle.loads(client.recv(1024))
+                dict_not_auth = {
+                    'response': 401,
+                    'alert': dict_signals[401]
+                }
+                client.send(pickle.dumps(dict_not_auth))
+                logger.info('неавторизованный пользователь отправил сообщение')
 
-    # Отправка сообщения в чат
-    if user_all:
+        # logout
         if authenticate:
-            msg_for_room_data = pickle.loads(client.recv(1024))
-            if msg_for_room_data['action'] == 'msg':
-                for i in room_names:
-                    if i == msg_for_room_data['to']:
-                        room_dict = {
-                            'response': 200,
-                            'time': timestamp,
-                            'alert': dict_signals[200]
-                        }
-                        client.send(pickle.dumps(room_dict))
-                    else:
-                        room_dict = {
-                            'response': 404,
-                            'time': timestamp,
-                            'alert': dict_signals[404]
-                        }
-                        client.send(pickle.dumps(room_dict))
-        else:
-            msg_for_room_data = pickle.loads(client.recv(1024))
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            client.send(pickle.dumps(dict_not_auth))
+            print(pickle.loads(client.recv(1024)))
+            logger.info('logout from server')
 
-    # logout
-    if authenticate:
-        print(pickle.loads(client.recv(1024)))
+        # отключение от сервера
+        client.send(pickle.dumps({'action': 'quit'}))
+        logger.info('server quit')
 
-    # отключение от сервера
-    client.send(pickle.dumps({'action': 'quit'}))
-
-    client.close()
-
+        client.close()
+except Exception as e:
+    logger.critical(e)
 
 # оптимизированные для проведения тестов функции, написанные выше
 if my_test:

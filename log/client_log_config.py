@@ -26,7 +26,6 @@ client_hand.setFormatter(format)
 logger.addHandler(client_hand)
 
 if __name__ == '__main__':
-    # Создаем потоковый обработчик логирования (по умолчанию sys.stderr):
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     logger.addHandler(console)

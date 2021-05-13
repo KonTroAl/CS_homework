@@ -1,17 +1,31 @@
 import logging
+from logging import handlers
 
 logging.basicConfig(
-    filename='client.log',
-    format='%(asctime)s-10s %(levelname) %(module)s %(message)s',
-    level=logging.WARNING
+    filename='server.log',
+    format = "%(asctime)s %(levelname)s %(module)-10s %(message)s",
+    level= logging.DEBUG
 )
 
-server_log = logging.getLogger('my_server')
+logger = logging.getLogger('my_server')
 
-# Создание обработчкиов
-format = logging.Formatter('%(asctime)s-10s %(levelname) %(module)s %(message)s')
-server_hand = logging.FileHandler('my_client.log', encoding='utf-8')
+# Создание обработчиков
+format = logging.Formatter("%(asctime)s %(levelname)s %(module)-10s %(message)s")
+server_hand = logging.FileHandler('my_server.log', encoding='utf-8')
+
 server_hand.setLevel(logging.INFO)
 server_hand.setFormatter(format)
+server_time_hand = logging.handlers.TimedRotatingFileHandler('my_server.log', when='s', interval=5)
+server_time_hand.setLevel(logging.INFO)
+server_time_hand.setFormatter(format)
 
-server_log.addHandler(server_hand)
+logger.addHandler(server_hand)
+logger.addHandler(server_time_hand)
+
+
+
+if __name__ == '__main__':
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    logger.addHandler(console)
+    logger.info('Тестовый запуск логирования')

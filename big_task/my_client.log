@@ -1,8 +1,12 @@
-2021-05-12 21:07:26,694 INFO my_client  start connection
-2021-05-12 21:07:26,698 INFO my_client  вход на сервер
-2021-05-12 21:07:26,698 INFO my_client  start user_authenticate
-2021-05-12 21:07:26,699 INFO my_client  start user_presence
-2021-05-12 21:07:26,699 INFO my_client  start message_to_user
-2021-05-12 21:07:26,699 INFO my_client  start message_to_all
-2021-05-12 21:07:26,699 INFO my_client  logout from server
-2021-05-12 21:07:26,700 INFO my_client  server quit
+2021-05-13 19:00:34,096 INFO my_client  start connection
+2021-05-13 19:00:34,100 INFO my_client  {'action': 'join', 'response': 100, 'alert': 'welcome!'}
+2021-05-13 19:00:34,100 INFO my_client  start user_authenticate
+2021-05-13 19:00:34,100 INFO my_client  {'response': 409, 'error': 'уже имеется подключение с указанным логином'}
+2021-05-13 19:00:34,101 INFO my_client  start user_presence
+2021-05-13 19:00:34,101 INFO my_client  {'action': 'probe', 'time': 1620914429}
+2021-05-13 19:00:34,101 INFO my_client  start message_to_user
+2021-05-13 19:00:34,101 INFO my_client  {'response': 200, 'time': 1620914429, 'alert': 'OOK!'}
+2021-05-13 19:00:34,101 INFO my_client  start message_to_all
+2021-05-13 19:00:34,101 INFO my_client  {'response': 200, 'time': 1620914429, 'alert': 'OOK!'}
+2021-05-13 19:00:34,101 INFO my_client  logout from server
+2021-05-13 19:00:34,102 INFO my_client  server quit
