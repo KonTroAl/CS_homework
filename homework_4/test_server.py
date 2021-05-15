@@ -1,6 +1,6 @@
 import unittest
 import time
-from big_task.my_server import presence_user, authenticate_user, message_to_user, message_to_all
+from big_task.my_server import user_authenticate, presence_user, message_to_user, message_to_room
 
 timestamp = int(time.time())
 
@@ -18,7 +18,7 @@ class TestClient(unittest.TestCase):
                 'password': 'SpaceShip007'
             }
         }
-        self.assertNotEqual(authenticate_user(dict_auth_test), 'authenticate completed!')
+        self.assertNotEqual(user_authenticate(dict_auth_test)['response'], 200)
 
     def test_user_presence(self):
         presence_dict = {
@@ -41,7 +41,7 @@ class TestClient(unittest.TestCase):
             'encoding': 'utf-8',
             'message': 'Hello world!'
         }
-        self.assertNotEqual(message_to_user(message_dict), 'OOK!')
+        self.assertNotEqual(message_to_user(message_dict)['response'], 200)
 
     def test_message_to_all(self):
         message_dict = {
@@ -52,7 +52,7 @@ class TestClient(unittest.TestCase):
             'encoding': 'utf-8',
             'message': 'Hello world!'
         }
-        self.assertNotEqual(message_to_all(message_dict), 'OOK!')
+        self.assertNotEqual(message_to_room(message_dict)['response'], 200)
 
 
 if __name__ == "__main__":

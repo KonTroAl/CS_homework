@@ -11,14 +11,6 @@ from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
 
-# Для проведения теста функций установить значение переменной my_test = True
-my_test = True
-
-# if my_test == False:
-s = socket(AF_INET, SOCK_STREAM)
-s.bind(('', 8007))
-s.listen(5)
-
 timestamp = int(time.time())
 
 users = {
@@ -44,250 +36,139 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-authenticate = True
-presence = False
-user_user = True
-user_all = True
-
-while True:
-    if my_test:
-        break
-
-    client, addr = s.accept()
-
-    # вход на сервер
-    dict_welcome = {
-        'action': 'join',
-        'response': 100,
-        'alert': dict_signals[100]
-    }
-    client.send(pickle.dumps(dict_welcome))
-
-    # Авторизация пользователя на сервере
-    if authenticate:
-        data = client.recv(1024)
-        client_data = pickle.loads(data)
-
-        if client_data['action'] == 'authenticate' and presence == False:
-            user = client_data['user']
-            for us, pas in users.items():
-                for val in user.values():
-                    if us == val and pas == user['password']:
-                        dict_auth_response = {
-                            'response': 200,
-                            'alert': dict_signals[200]
-                        }
-                        print('authenticate completed!')
-                        client.send(pickle.dumps(dict_auth_response))
-                        presence = True
-                        break
-                    else:
-                        dict_auth_response = {
-                            'response': 402,
-                            'error': dict_signals[402]
-                        }
-                        print('error!')
-                        client.send(pickle.dumps(dict_auth_response))
-                        break
-        else:
-            dict_auth_response = {
-                'response': 409,
-                'error': dict_signals[409]
-            }
-            print('Someone is already connected with the given user name!')
-            presence = True
-            signal_409 = True
-            client.send(pickle.dumps(dict_auth_response))
+auth = False
 
 
-    # Проверка присутствия пользователя
-    def presence_user():
-        dict_probe = {
-            'action': 'probe',
-            'time': timestamp
+# Авторизация пользователя на сервере
+def user_authenticate(my_dict):
+    if my_dict['action'] == 'authenticate':
+        user = my_dict['user']
+        for us, pas in users.items():
+            for val in user.values():
+                if us == val and pas == user['password']:
+                    dict_auth_response = {
+                        'response': 200,
+                        'alert': dict_signals[200]
+                    }
+                    print('authenticate completed!')
+                    return dict_auth_response
+                else:
+                    dict_auth_response = {
+                        'response': 402,
+                        'error': dict_signals[402]
+                    }
+                    print('error!')
+                    return dict_auth_response
+    # else:
+    #     dict_auth_response = {
+    #         'response': 409,
+    #         'error': dict_signals[409]
+    #     }
+    #     print('Someone is already connected with the given user name!')
+    #     return dict_auth_response
+
+
+# Проверка присутствия пользователя
+def presence_user(my_dict):
+    print('Сообщение от клиента: ', my_dict, ', длиной ', len(my_dict), ' байт')
+    return my_dict['action']
+
+
+# Отправка сообщения другому пользователю
+def message_to_user(my_dict):
+    if my_dict['action'] == 'msg':
+        if list(my_dict['to'])[0].isalpha():
+            for i in usernames_friends:
+                if my_dict['to'] == i:
+                    msg_dict = {
+                        'response': 200,
+                        'time': timestamp,
+                        'alert': dict_signals[200]
+                    }
+                    print('message send!')
+                    return msg_dict
+                else:
+                    msg_dict = {
+                        'response': 404,
+                        'time': timestamp,
+                        'alert': dict_signals[404]
+                    }
+                    return msg_dict
+
+
+# Отправка сообщения в чат
+def message_to_room(my_dict):
+    if my_dict['action'] == 'msg':
+        for i in room_names:
+            if i == my_dict['to']:
+                room_dict = {
+                    'response': 200,
+                    'time': timestamp,
+                    'alert': dict_signals[200]
+                }
+                print('message send!')
+                return room_dict
+            else:
+                room_dict = {
+                    'response': 404,
+                    'time': timestamp,
+                    'alert': dict_signals[404]
+                }
+                return room_dict
+
+
+if __name__ == '__main__':
+    s = socket(AF_INET, SOCK_STREAM)
+    s.bind(('', 8007))
+    s.listen(5)
+
+    while True:
+        client, addr = s.accept()
+
+        dict_welcome = {
+            'action': 'join',
+            'response': 100,
+            'alert': dict_signals[100]
         }
-        client.send(pickle.dumps(dict_probe))
-        presence_data = client.recv(1024)
-        print('Сообщение от клиента: ', pickle.loads(presence_data), ', длиной ', len(presence_data), ' байт')
-        return pickle.loads(presence_data)['action']
+        client.send(pickle.dumps(dict_welcome))
 
+        # авторизация пользователя
+        aut_data = client.recv(1024)
+        aut_dict = user_authenticate(pickle.loads(aut_data))
+        if aut_dict['response'] == 200 or 409:
+            auth = True
+        client.send(pickle.dumps(aut_dict))
 
-    if presence:
-        presence_user()
+        # проверка присутствия
+        if auth == True:
 
-    # Отправка сообщения другому пользователю
-    if user_user:
-        if authenticate:
-            msg_data = pickle.loads(client.recv(1024))
-            if msg_data['action'] == 'msg':
-                if list(msg_data['to'])[0].isalpha():
-                    for i in usernames_friends:
-                        if msg_data['to'] == i:
-                            msg_dict = {
-                                'response': 200,
-                                'time': timestamp,
-                                'alert': dict_signals[200]
-                            }
-                            client.send(pickle.dumps(msg_dict))
-                        else:
-                            msg_dict = {
-                                'response': 404,
-                                'time': timestamp,
-                                'alert': dict_signals[404]
-                            }
-                            client.send(pickle.dumps(msg_dict))
+            dict_probe = {
+                'action': 'probe',
+                'time': timestamp
+            }
+            client.send(pickle.dumps(dict_probe))
+
+            pre_data = client.recv(1024)
+            print('Сообщение от клиента: ', pickle.loads(pre_data), ', длиной ', len(pre_data), ' байт')
+
+            # отправка сообщения пользователю
+            msg_for_user_data = pickle.loads(client.recv(1024))
+            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
+
+            # отправка сообщения в чат
+            msg_for_room_data = pickle.loads(client.recv(1024))
+            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
+
+            # logout
+            print(pickle.loads(client.recv(1024)))
         else:
-            msg_data = pickle.loads(client.recv(1024))
             dict_not_auth = {
                 'response': 401,
                 'alert': dict_signals[401]
             }
             client.send(pickle.dumps(dict_not_auth))
 
-    # Отправка сообщения в чат
-    if user_all:
-        if authenticate:
-            msg_for_room_data = pickle.loads(client.recv(1024))
-            if msg_for_room_data['action'] == 'msg':
-                for i in room_names:
-                    if i == msg_for_room_data['to']:
-                        room_dict = {
-                            'response': 200,
-                            'time': timestamp,
-                            'alert': dict_signals[200]
-                        }
-                        client.send(pickle.dumps(room_dict))
-                    else:
-                        room_dict = {
-                            'response': 404,
-                            'time': timestamp,
-                            'alert': dict_signals[404]
-                        }
-                        client.send(pickle.dumps(room_dict))
-        else:
-            msg_for_room_data = pickle.loads(client.recv(1024))
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            client.send(pickle.dumps(dict_not_auth))
+        # отключение от сервера
+        client.send(pickle.dumps({'action': 'quit'}))
 
-    # logout
-    if authenticate:
-        print(pickle.loads(client.recv(1024)))
-
-    # отключение от сервера
-    client.send(pickle.dumps({'action': 'quit'}))
-
-    client.close()
-
-
-# оптимизированные для проведения тестов функции, написанные выше
-if my_test:
-    authenticate = False
-
-    dict_auth = {
-        'action': 'authenticate',
-        'time': timestamp,
-        'user': {
-            'user_name': 'KonTroAll',
-            'password': 'SpaceShip007'
-        }
-    }
-
-
-    def authenticate_user(my_dict):
-        client_data = my_dict
-
-        if client_data['action'] == 'authenticate':
-            user = client_data['user']
-            for us, pas in users.items():
-                for val in user.values():
-                    if us == val and pas == user['password']:
-                        dict_auth_response = {
-                            'response': 200,
-                            'alert': dict_signals[200]
-                        }
-                        return 'authenticate completed!'
-                    else:
-                        dict_auth_response = {
-                            'response': 402,
-                            'error': dict_signals[402]
-                        }
-                        return 'error!'
-        else:
-            dict_auth_response = {
-                'response': 409,
-                'error': dict_signals[409]
-            }
-            return 'Someone is already connected with the given user name!'
-
-
-    # Проверка присутствия пользователя
-    def presence_user(my_dict):
-        dict_probe = {
-            'action': 'probe',
-            'time': timestamp
-        }
-        presence_data = my_dict
-        return presence_data['action']
-
-
-    # Отправка сообщения другому пользователю
-    def message_to_user(my_dict):
-        msg_data = my_dict
-        if authenticate_user(dict_auth) == 'authenticate completed!':
-            if msg_data['action'] == 'msg':
-                if list(msg_data['to'])[0].isalpha():
-                    for i in usernames_friends:
-                        if msg_data['to'] == i:
-                            msg_dict = {
-                                'response': 200,
-                                'time': timestamp,
-                                'alert': dict_signals[200]
-                            }
-                            return 'OOK!'
-                        else:
-                            msg_dict = {
-                                'response': 404,
-                                'time': timestamp,
-                                'alert': dict_signals[404]
-                            }
-                            return 'пользователь/чат отсутствует на сервере'
-        else:
-            msg_data = my_dict
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            return 'не авторизован'
-
-
-    #
-    #     # Отправка сообщения в чат
-    def message_to_all(my_dict):
-        if authenticate_user(dict_auth) == 'authenticate completed!':
-            msg_for_room_data = my_dict
-            if msg_for_room_data['action'] == 'msg':
-                for i in room_names:
-                    if i == msg_for_room_data['to']:
-                        room_dict = {
-                            'response': 200,
-                            'time': timestamp,
-                            'alert': dict_signals[200]
-                        }
-                        return 'OOK!'
-                    else:
-                        room_dict = {
-                            'response': 404,
-                            'time': timestamp,
-                            'alert': dict_signals[404]
-                        }
-                        return 'пользователь/чат отсутствует на сервере'
-        else:
-            msg_for_room_data = my_dict
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            return 'не авторизован'
+        client.close()
