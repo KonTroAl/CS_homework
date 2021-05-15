@@ -13,6 +13,7 @@ import time
 import pickle
 import logging
 import log.client_log_config
+from functools import wraps
 
 logger = logging.getLogger('my_client')
 
@@ -43,6 +44,17 @@ dict_signals = {
 authenticate = True
 
 timestamp = int(time.time())
+
+call_log = open('call.log', 'w')
+
+# декоратор
+def client_log_dec(func):
+    @wraps(func)
+    def call(*args, **kwargs):
+        call_log.write("Вызов %s: %s, %s\n" % (func.__name__, args, kwargs))
+        a = func(*args, *kwargs)
+        return a
+    return call()
 
 
 # Авторизация пользователя на сервере
