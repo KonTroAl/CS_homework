@@ -16,7 +16,6 @@ import log.client_log_config
 
 logger = logging.getLogger('my_client')
 
-
 users = {
     'KonTroAll': 'SpaceShip007'
 }
@@ -42,57 +41,28 @@ dict_signals = {
 }
 
 authenticate = True
-presence = False
-user_user = True
-user_all = True
-my_test = False
 
-try:
-
-    logger.info('start connection')
-    timestamp = int(time.time())
-    s = socket(AF_INET, SOCK_STREAM)
-    s.connect(('localhost', 8007))
+timestamp = int(time.time())
 
 
-    # вход на сервер
-    welcome_data = s.recv(1024)
-    logger.info(pickle.loads(welcome_data))
-    # print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
-
-
-    # Авторизация пользователя на сервере
-    def user_authenticate(username, password):
-        logger.info('start user_authenticate')
-        dict_auth = {
-            'action': 'authenticate',
-            'time': timestamp,
-            'user': {
-                'user_name': username,
-                'password': password
-            }
+# Авторизация пользователя на сервере
+def user_authenticate(username, password):
+    logger.info('start user_authenticate!')
+    dict_auth = {
+        'action': 'authenticate',
+        'time': timestamp,
+        'user': {
+            'user_name': username,
+            'password': password
         }
-        s.send(pickle.dumps(dict_auth))
-        data = s.recv(1024)
-        load_data = pickle.loads(data)
-
-        logger.info(load_data)
-        print('Сообщение от сервера: ', load_data, ', длиной ', len(data), ' байт')
-        return load_data['response']
+    }
+    return dict_auth
 
 
-    for i in usernames:
-        response = user_authenticate(i, users[i])
-        if response == 200 or 409:
-            presence = True
-
-    # Проверка присутствия пользователя
-
-    def user_presence():
-        logger.info('start user_presence')
-        probe_data = s.recv(1024)
-        logger.info(pickle.loads(probe_data))
-        # print('Сообщение от сервера: ', pickle.loads(probe_data), ', длиной ', len(probe_data), ' байт')
+# Проверка присутствия пользователя
+def user_presence(my_dict):
+    logger.info('start user_presence!')
+    if my_dict['action'] == 'probe':
         presence_dict = {
             'action': 'presence',
             'time': timestamp,
@@ -102,84 +72,88 @@ try:
                 'status': 'I am still here!'
             }
         }
-        s.send(pickle.dumps(presence_dict))
-        return pickle.loads(probe_data)['action']
-
-    if presence:
-        print(user_presence())
-
-    # Отправка сообщения другому пользователю
-    def message_to_user(user_1, user_2, message):
-        logger.info('start message_to_user')
-        message_dict = {
-            'action': 'msg',
-            'time': timestamp,
-            'to': user_2,
-            'from': user_1,
-            'encoding': 'utf-8',
-            'message': message
-        }
-        s.send(pickle.dumps(message_dict))
-        print('message send to user!')
-        data_msg = s.recv(1024)
-        data_msg_load = pickle.loads(data_msg)
-        logger.info(data_msg_load)
-        # print('Сообщение от сервера: ', data_msg_load, ', длиной ', len(data_msg), ' байт')
-        return data_msg_load['response']
+        return presence_dict
+    else:
+        return 'error!'
 
 
-    if user_user:
-        message_to_user('KonTroAll', 'Julia', 'Hello world!')
+# Отправка сообщения другому пользователю
+def message_to_user(user_1, user_2, message):
+    logger.info('start message_to_user!')
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': user_2,
+        'from': user_1,
+        'encoding': 'utf-8',
+        'message': message
+    }
+    return message_dict
 
 
-    # Отправка сообщения в чат
-    def message_to_all(user, room_name, message):
-        logger.info('start message_to_all')
-        message_dict = {
-            'action': 'msg',
-            'time': timestamp,
-            'to': room_name,
-            'from': user,
-            'encoding': 'utf-8',
-            'message': message
-        }
-        s.send(pickle.dumps(message_dict))
-        print('message send!')
-        data_msg = s.recv(1024)
-        logger.info(pickle.loads(data_msg))
-        # print('Сообщение от сервера: ', pickle.loads(data_msg), ', длиной ', len(data_msg), ' байт')
-        return pickle.loads(data_msg)['response']
+# Отправка сообщения в чат
+def message_to_all(user, room_name, message):
+    logger.info('start message_to_all!')
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': room_name,
+        'from': user,
+        'encoding': 'utf-8',
+        'message': message
+    }
+    return message_dict
 
 
-    if user_all:
-        message_to_all('KonTroAll', '#smalltalk', 'Hello world!')
+if __name__ == '__main__':
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect(('localhost', 8007))
+    logger.info('start connection!')
 
-    # logout
-    if authenticate:
-        logger.info('logout from server')
+    # вход на сервер
+    welcome_data = s.recv(1024)
+    logger.info(pickle.loads(welcome_data))
+    print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
+
+    # Авторизация пользователя на сервере
+    s.send(pickle.dumps(user_authenticate('KonTroAll', 'SpaceShip007')))
+    auth_data = s.recv(1024)
+    auth_data_loads = pickle.loads(auth_data)
+    logger.info(auth_data_loads)
+    print('Сообщение от сервера: ', pickle.loads(auth_data), ', длиной ', len(auth_data), ' байт')
+
+    if auth_data_loads['response'] == 200 or 409:
+        # проверка присутствия
+        pre_data = s.recv(1024)
+        logger.info(pickle.loads(pre_data))
+        print('Сообщение от сервера: ', pickle.loads(pre_data), ', длиной ', len(pre_data), ' байт')
+        s.send(pickle.dumps(user_presence(pickle.loads(pre_data))))
+
+        # отправка сообщения пользователю
+        s.send(pickle.dumps(message_to_user('KonTroAll', 'Julia', 'Hello world!')))
+        message_user_data = s.recv(1024)
+        logger.info(pickle.loads(message_user_data))
+        print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
+
+        # отправка сообщения в чат
+        s.send(pickle.dumps(message_to_all('KonTroAll', '#smalltalk', 'Hello world!')))
+        message_room_data = s.recv(1024)
+        logger.info(pickle.loads(message_room_data))
+        print('Сообщение от сервера: ', pickle.loads(message_room_data), ', длиной ', len(message_room_data), ' байт')
+
+        # logout
+        logger.info('start logout!')
         dict_logout = {
             'action': 'logout',
             'response': 102,
             'alert': dict_signals[102]
         }
         s.send(pickle.dumps(dict_logout))
-        print('logout')
+    else:
+        print('Error!')
 
     # отключение от сервера
     quit_data = s.recv(1024)
+    logger.info(pickle.loads(quit_data))
     print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт \n')
-    logger.info('server quit')
-
     s.close()
-
-except Exception as e:
-    logger.critical(e)
-
-    if my_test:
-        s = socket(AF_INET, SOCK_STREAM)
-        s.connect(('localhost', 8007))
-        welcome_data = s.recv(1024)
-        #
-        # data = s.recv(1024)
-        # quit_data= s.recv(1024)
-

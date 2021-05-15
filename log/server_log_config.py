@@ -15,7 +15,7 @@ server_hand = logging.FileHandler('my_server.log', encoding='utf-8')
 
 server_hand.setLevel(logging.INFO)
 server_hand.setFormatter(format)
-server_time_hand = logging.handlers.TimedRotatingFileHandler('my_server', when='midnight', interval=1)
+server_time_hand = logging.handlers.TimedRotatingFileHandler('my_server.log', when='midnight', interval=1)
 server_time_hand.setLevel(logging.INFO)
 server_time_hand.setFormatter(format)
 
