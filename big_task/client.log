@@ -186,3 +186,39 @@
 2021-05-16 20:28:36,279 INFO my_client  {'response': 200, 'time': 1621178597, 'alert': 'OOK!'}
 2021-05-16 20:28:36,279 INFO my_client  start logout!
 2021-05-16 20:28:36,279 INFO my_client  {'action': 'quit'}
+2021-05-16 20:31:28,683 INFO my_client  start connection!
+2021-05-16 20:31:28,683 INFO my_client  {'action': 'join', 'response': 100, 'alert': 'welcome!'}
+2021-05-16 20:31:28,683 INFO my_client  start user_authenticate!
+2021-05-16 20:31:28,684 INFO my_client  {'response': 200, 'alert': 'OOK!'}
+2021-05-16 20:31:28,684 INFO my_client  {'action': 'probe', 'time': 1621179079}
+2021-05-16 20:31:28,684 INFO my_client  start user_presence!
+2021-05-16 20:31:28,684 INFO my_client  start message_to_user!
+2021-05-16 20:31:28,685 INFO my_client  {'response': 200, 'time': 1621179079, 'alert': 'OOK!'}
+2021-05-16 20:31:28,685 INFO my_client  start message_to_all!
+2021-05-16 20:31:28,686 INFO my_client  {'response': 200, 'time': 1621179079, 'alert': 'OOK!'}
+2021-05-16 20:31:28,686 INFO my_client  start logout!
+2021-05-16 20:31:28,686 INFO my_client  {'action': 'quit'}
+2021-05-16 20:31:59,504 INFO my_client  start connection!
+2021-05-16 20:31:59,504 INFO my_client  {'action': 'join', 'response': 100, 'alert': 'welcome!'}
+2021-05-16 20:31:59,505 INFO my_client  start user_authenticate!
+2021-05-16 20:31:59,505 INFO my_client  {'response': 200, 'alert': 'OOK!'}
+2021-05-16 20:31:59,505 INFO my_client  {'action': 'probe', 'time': 1621179079}
+2021-05-16 20:31:59,505 INFO my_client  start user_presence!
+2021-05-16 20:31:59,505 INFO my_client  start message_to_user!
+2021-05-16 20:31:59,506 INFO my_client  {'response': 200, 'time': 1621179079, 'alert': 'OOK!'}
+2021-05-16 20:31:59,506 INFO my_client  start message_to_all!
+2021-05-16 20:31:59,506 INFO my_client  {'response': 200, 'time': 1621179079, 'alert': 'OOK!'}
+2021-05-16 20:31:59,507 INFO my_client  start logout!
+2021-05-16 20:31:59,507 INFO my_client  {'action': 'quit'}
+2021-05-16 20:32:22,268 INFO my_client  start connection!
+2021-05-16 20:32:22,268 INFO my_client  {'action': 'join', 'response': 100, 'alert': 'welcome!'}
+2021-05-16 20:32:22,269 INFO my_client  start user_authenticate!
+2021-05-16 20:32:22,269 INFO my_client  {'response': 200, 'alert': 'OOK!'}
+2021-05-16 20:32:22,269 INFO my_client  {'action': 'probe', 'time': 1621179140}
+2021-05-16 20:32:22,269 INFO my_client  start user_presence!
+2021-05-16 20:32:22,270 INFO my_client  start message_to_user!
+2021-05-16 20:32:22,270 INFO my_client  {'response': 200, 'time': 1621179140, 'alert': 'OOK!'}
+2021-05-16 20:32:22,270 INFO my_client  start message_to_all!
+2021-05-16 20:32:22,271 INFO my_client  {'response': 200, 'time': 1621179140, 'alert': 'OOK!'}
+2021-05-16 20:32:22,271 INFO my_client  start logout!
+2021-05-16 20:32:22,271 INFO my_client  {'action': 'quit'}

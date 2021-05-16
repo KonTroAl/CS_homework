@@ -12,6 +12,8 @@ import time
 import pickle
 import logging
 import log.server_log_config
+from functools import wraps
+import datetime
 
 logger = logging.getLogger('my_server')
 
@@ -41,9 +43,19 @@ dict_signals = {
 }
 
 auth = False
+call_log = open('call_sever.log', 'w')
+
+def server_log_dec(func):
+    @wraps(func)
+    def call(*args, ** kwargs):
+        res = func(*args, **kwargs)
+        call_log.write(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}\n')
+        return res
+    return call
 
 
 # Авторизация пользователя на сервере
+@server_log_dec
 def user_authenticate(my_dict):
     logger.info('start user_authenticate!')
     if my_dict['action'] == 'authenticate':
