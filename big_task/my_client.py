@@ -14,6 +14,7 @@ import pickle
 import logging
 import log.client_log_config
 from functools import wraps
+import datetime
 
 logger = logging.getLogger('my_client')
 
@@ -50,14 +51,15 @@ call_log = open('call.log', 'w')
 # декоратор
 def client_log_dec(func):
     @wraps(func)
-    def call(*args, **kwargs):
-        call_log.write("Вызов %s: %s, %s\n" % (func.__name__, args, kwargs))
-        a = func(*args, *kwargs)
-        return a
-    return call()
+    def call(*args, ** kwargs):
+        res = func(*args, **kwargs)
+        call_log.write(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}\n')
+        return res
+    return call
 
 
 # Авторизация пользователя на сервере
+@client_log_dec
 def user_authenticate(username, password):
     logger.info('start user_authenticate!')
     dict_auth = {
@@ -72,6 +74,7 @@ def user_authenticate(username, password):
 
 
 # Проверка присутствия пользователя
+@client_log_dec
 def user_presence(my_dict):
     logger.info('start user_presence!')
     if my_dict['action'] == 'probe':
@@ -90,6 +93,7 @@ def user_presence(my_dict):
 
 
 # Отправка сообщения другому пользователю
+@client_log_dec
 def message_to_user(user_1, user_2, message):
     logger.info('start message_to_user!')
     message_dict = {
@@ -104,6 +108,7 @@ def message_to_user(user_1, user_2, message):
 
 
 # Отправка сообщения в чат
+@client_log_dec
 def message_to_all(user, room_name, message):
     logger.info('start message_to_all!')
     message_dict = {
@@ -128,7 +133,8 @@ if __name__ == '__main__':
     print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
     # Авторизация пользователя на сервере
-    s.send(pickle.dumps(user_authenticate('KonTroAll', 'SpaceShip007')))
+    a = user_authenticate('KonTroAll', 'SpaceShip007')
+    s.send(pickle.dumps(a))
     auth_data = s.recv(1024)
     auth_data_loads = pickle.loads(auth_data)
     logger.info(auth_data_loads)

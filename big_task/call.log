@@ -1,0 +1,4 @@
+2021-05-16 20:28:36.277607 Call user_authenticate: ('KonTroAll', 'SpaceShip007'), {}
+2021-05-16 20:28:36.278605 Call user_presence: ({'action': 'probe', 'time': 1621178597},), {}
+2021-05-16 20:28:36.278605 Call message_to_user: ('KonTroAll', 'Julia', 'Hello world!'), {}
+2021-05-16 20:28:36.279602 Call message_to_all: ('KonTroAll', '#smalltalk', 'Hello world!'), {}
