@@ -43,13 +43,12 @@ dict_signals = {
 }
 
 auth = False
-call_log = open('logs/call_sever.log', 'w')
 
 def server_log_dec(func):
     @wraps(func)
     def call(*args, ** kwargs):
         res = func(*args, **kwargs)
-        call_log.write(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}\n')
+        logger.info(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}')
         return res
     return call
 
@@ -57,7 +56,7 @@ def server_log_dec(func):
 # Авторизация пользователя на сервере
 @server_log_dec
 def user_authenticate(my_dict):
-    logger.info('start user_authenticate!')
+    # logger.info('start user_authenticate!')
     if my_dict['action'] == 'authenticate':
         user = my_dict['user']
         for us, pas in users.items():
@@ -88,15 +87,17 @@ def user_authenticate(my_dict):
 
 
 # Проверка присутствия пользователя
+@server_log_dec
 def presence_user(my_dict):
-    logger.info('start presence_user!')
+    # logger.info('start presence_user!')
     print('Сообщение от клиента: ', my_dict, ', длиной ', len(my_dict), ' байт')
     return my_dict['action']
 
 
 # Отправка сообщения другому пользователю
+@server_log_dec
 def message_to_user(my_dict):
-    logger.info('start message_to_user!')
+    # logger.info('start message_to_user!')
     if my_dict['action'] == 'msg':
         if list(my_dict['to'])[0].isalpha():
             for i in usernames_friends:
@@ -120,8 +121,9 @@ def message_to_user(my_dict):
 
 
 # Отправка сообщения в чат
+@server_log_dec
 def message_to_room(my_dict):
-    logger.info('start message_to_room!')
+    # logger.info('start message_to_room!')
     if my_dict['action'] == 'msg':
         for i in room_names:
             if i == my_dict['to']:
@@ -176,7 +178,7 @@ if __name__ == '__main__':
             client.send(pickle.dumps(dict_probe))
 
             pre_data = client.recv(1024)
-            print('Сообщение от клиента: ', pickle.loads(pre_data), ', длиной ', len(pre_data), ' байт')
+            presence_user(pickle.loads(pre_data))
 
             # отправка сообщения пользователю
             msg_for_user_data = pickle.loads(client.recv(1024))

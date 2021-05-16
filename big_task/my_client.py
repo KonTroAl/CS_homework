@@ -46,14 +46,12 @@ authenticate = True
 
 timestamp = int(time.time())
 
-call_log = open('logs/call_client.log', 'w')
-
 # декоратор
 def client_log_dec(func):
     @wraps(func)
     def call(*args, ** kwargs):
         res = func(*args, **kwargs)
-        call_log.write(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}\n')
+        logger.info(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}')
         return res
     return call
 

@@ -1,14 +1,42 @@
-2021-05-16 20:34:24,058 INFO my_server  start connection!
-2021-05-16 20:35:55,381 INFO my_server  start user_authenticate!
-2021-05-16 20:35:55,381 INFO my_server  authenticate completed!
-2021-05-16 20:35:55,382 INFO my_server  start message_to_user!
-2021-05-16 20:35:55,382 INFO my_server  message send!
-2021-05-16 20:35:55,383 INFO my_server  start message_to_user!
-2021-05-16 20:35:55,383 INFO my_server  message send!
-2021-05-16 20:37:26,425 INFO my_server  start connection!
-2021-05-16 20:37:37,593 INFO my_server  start user_authenticate!
-2021-05-16 20:37:37,593 INFO my_server  authenticate completed!
-2021-05-16 20:37:37,594 INFO my_server  start message_to_user!
-2021-05-16 20:37:37,594 INFO my_server  message send!
-2021-05-16 20:37:37,595 INFO my_server  start message_to_user!
-2021-05-16 20:37:37,595 INFO my_server  message send!
+2021-05-16 20:52:42,747 INFO my_server  start connection!
+2021-05-16 20:52:56,139 INFO my_server  authenticate completed!
+2021-05-16 20:52:56,139 INFO my_server  2021-05-16 20:52:56.139911 Call user_authenticate: ({'action': 'authenticate', 'time': 1621180376, 'user': {'user_name': 'KonTroAll', 'password': 'SpaceShip007'}},), {}
+
+2021-05-16 20:52:56,139 INFO my_server  2021-05-16 20:52:56.139911 Call presence_user: ({'action': 'presence', 'time': 1621180376, 'type': 'status', 'user': {'username': 'KonTroAll', 'status': 'I am still here!'}},), {}
+
+2021-05-16 20:52:56,140 INFO my_server  message send!
+2021-05-16 20:52:56,140 INFO my_server  2021-05-16 20:52:56.140905 Call message_to_user: ({'action': 'msg', 'time': 1621180376, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:52:56,140 INFO my_server  message send!
+2021-05-16 20:52:56,140 INFO my_server  2021-05-16 20:52:56.140905 Call message_to_user: ({'action': 'msg', 'time': 1621180376, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:55:31,868 INFO my_server  authenticate completed!
+2021-05-16 20:55:31,868 INFO my_server  2021-05-16 20:55:31.868367 Call user_authenticate: ({'action': 'authenticate', 'time': 1621180531, 'user': {'user_name': 'KonTroAll', 'password': 'SpaceShip007'}},), {}
+
+2021-05-16 20:55:31,868 INFO my_server  2021-05-16 20:55:31.868367 Call presence_user: ({'action': 'presence', 'time': 1621180531, 'type': 'status', 'user': {'username': 'KonTroAll', 'status': 'I am still here!'}},), {}
+
+2021-05-16 20:55:31,868 INFO my_server  message send!
+2021-05-16 20:55:31,869 INFO my_server  2021-05-16 20:55:31.868367 Call message_to_user: ({'action': 'msg', 'time': 1621180531, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:55:31,869 INFO my_server  message send!
+2021-05-16 20:55:31,869 INFO my_server  2021-05-16 20:55:31.869366 Call message_to_user: ({'action': 'msg', 'time': 1621180531, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:55:50,208 INFO my_server  authenticate completed!
+2021-05-16 20:55:50,208 INFO my_server  2021-05-16 20:55:50.208317 Call user_authenticate: ({'action': 'authenticate', 'time': 1621180550, 'user': {'user_name': 'KonTroAll', 'password': 'SpaceShip007'}},), {}
+
+2021-05-16 20:55:50,209 INFO my_server  2021-05-16 20:55:50.209314 Call presence_user: ({'action': 'presence', 'time': 1621180550, 'type': 'status', 'user': {'username': 'KonTroAll', 'status': 'I am still here!'}},), {}
+
+2021-05-16 20:55:50,209 INFO my_server  message send!
+2021-05-16 20:55:50,209 INFO my_server  2021-05-16 20:55:50.209314 Call message_to_user: ({'action': 'msg', 'time': 1621180550, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:55:50,210 INFO my_server  message send!
+2021-05-16 20:55:50,210 INFO my_server  2021-05-16 20:55:50.210312 Call message_to_user: ({'action': 'msg', 'time': 1621180550, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+
+2021-05-16 20:56:02,422 INFO my_server  start connection!
+2021-05-16 20:56:05,157 INFO my_server  authenticate completed!
+2021-05-16 20:56:05,157 INFO my_server  2021-05-16 20:56:05.157294 Call user_authenticate: ({'action': 'authenticate', 'time': 1621180565, 'user': {'user_name': 'KonTroAll', 'password': 'SpaceShip007'}},), {}
+2021-05-16 20:56:05,158 INFO my_server  2021-05-16 20:56:05.158292 Call presence_user: ({'action': 'presence', 'time': 1621180565, 'type': 'status', 'user': {'username': 'KonTroAll', 'status': 'I am still here!'}},), {}
+2021-05-16 20:56:05,158 INFO my_server  message send!
+2021-05-16 20:56:05,158 INFO my_server  2021-05-16 20:56:05.158292 Call message_to_user: ({'action': 'msg', 'time': 1621180565, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
+2021-05-16 20:56:05,159 INFO my_server  message send!
+2021-05-16 20:56:05,159 INFO my_server  2021-05-16 20:56:05.159373 Call message_to_user: ({'action': 'msg', 'time': 1621180565, 'to': 'Julia', 'from': 'KonTroAll', 'encoding': 'utf-8', 'message': 'Hello world!'},), {}
