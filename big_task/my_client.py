@@ -46,7 +46,7 @@ authenticate = True
 
 timestamp = int(time.time())
 
-call_log = open('call_client.log', 'w')
+call_log = open('logs/call_client.log', 'w')
 
 # декоратор
 def client_log_dec(func):

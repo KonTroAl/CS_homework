@@ -10,16 +10,16 @@
 import logging
 
 logging.basicConfig(
-    filename='client.log',
+    filename='logs/client.log',
     format = "%(asctime)s %(levelname)s %(module)-10s %(message)s",
     level= logging.DEBUG
 )
 
-logger = logging.getLogger('my_client')
+logger = logging.getLogger('logs/my_client')
 
 # Создание обработчиков
 format = logging.Formatter("%(asctime)s %(levelname)s %(module)-10s %(message)s")
-client_hand = logging.FileHandler('my_client.log', encoding='utf-8')
+client_hand = logging.FileHandler('logs/my_client.log', encoding='utf-8')
 client_hand.setLevel(logging.INFO)
 client_hand.setFormatter(format)
 

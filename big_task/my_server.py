@@ -43,7 +43,7 @@ dict_signals = {
 }
 
 auth = False
-call_log = open('call_sever.log', 'w')
+call_log = open('logs/call_sever.log', 'w')
 
 def server_log_dec(func):
     @wraps(func)
