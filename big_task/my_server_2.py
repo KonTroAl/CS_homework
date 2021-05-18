@@ -43,14 +43,12 @@ dict_signals = {
 
 auth = False
 
-
 def server_log_dec(func):
     @wraps(func)
-    def call(*args, **kwargs):
+    def call(*args, ** kwargs):
         res = func(*args, **kwargs)
         logger.info(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}')
         return res
-
     return call
 
 
@@ -154,9 +152,51 @@ if __name__ == '__main__':
 
     while True:
         client, addr = s.accept()
+
         dict_welcome = {
             'action': 'join',
             'response': 100,
             'alert': dict_signals[100]
         }
         client.send(pickle.dumps(dict_welcome))
+
+        # авторизация пользователя
+        aut_data = client.recv(1024)
+        aut_dict = user_authenticate(pickle.loads(aut_data))
+        if aut_dict['response'] == 200 or 409:
+            auth = True
+        client.send(pickle.dumps(aut_dict))
+
+        # проверка присутствия
+        if auth == True:
+
+            dict_probe = {
+                'action': 'probe',
+                'time': timestamp
+            }
+            client.send(pickle.dumps(dict_probe))
+
+            pre_data = client.recv(1024)
+            presence_user(pickle.loads(pre_data))
+
+            # отправка сообщения пользователю
+            msg_for_user_data = pickle.loads(client.recv(1024))
+            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
+
+            # отправка сообщения в чат
+            msg_for_room_data = pickle.loads(client.recv(1024))
+            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
+
+            # logout
+            print(pickle.loads(client.recv(1024)))
+        else:
+            dict_not_auth = {
+                'response': 401,
+                'alert': dict_signals[401]
+            }
+            client.send(pickle.dumps(dict_not_auth))
+
+        # отключение от сервера
+        client.send(pickle.dumps({'action': 'quit'}))
+
+        client.close()
