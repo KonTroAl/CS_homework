@@ -41,7 +41,7 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-auth = False
+
 
 
 def server_log_dec(func):
@@ -56,10 +56,12 @@ def server_log_dec(func):
 
 # Авторизация пользователя на сервере
 @server_log_dec
-def user_authenticate(my_dict):
+def user_authenticate(client):
     # logger.info('start user_authenticate!')
-    if my_dict['action'] == 'authenticate':
-        user = my_dict['user']
+    auth_data = client.recv(1024)
+    auth_data_load = pickle.loads(auth_data)
+    if auth_data_load['action'] == 'authenticate':
+        user = auth_data_load['user']
         for us, pas in users.items():
             for val in user.values():
                 if us == val and pas == user['password']:
@@ -146,12 +148,8 @@ def message_to_room(my_dict):
                 return room_dict
 
 
-if __name__ == '__main__':
-    s = socket(AF_INET, SOCK_STREAM)
-    s.bind(('', 8007))
-    s.listen(5)
-    logger.info('start connection!')
-
+def user_activity(s):
+    auth = False
     while True:
         client, addr = s.accept()
         dict_welcome = {
@@ -160,3 +158,23 @@ if __name__ == '__main__':
             'alert': dict_signals[100]
         }
         client.send(pickle.dumps(dict_welcome))
+
+        user_authenticate(client)
+
+        if user_authenticate(client)['response'] == 200 or 409:
+            auth = True
+
+        client.close()
+
+if __name__ == '__main__':
+    s = socket(AF_INET, SOCK_STREAM)
+    s.bind(('', 8007))
+    s.listen(5)
+    logger.info('start connection!')
+    user_activity(s)
+
+
+
+
+
+
