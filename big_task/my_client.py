@@ -106,8 +106,9 @@ def user_presence(s):
 # Отправка сообщения другому пользователю
 @client_log_dec
 def message_send(s):
-    user_choice = input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit'")
+    user_choice = input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ")
     if user_choice == 'msg':
+        s.send(pickle.dumps(user_choice))
         to = input('Кому отправить сообщение: ')
         message = input('Enter message: ')
         logger.info('start message_to_user!')
@@ -124,30 +125,35 @@ def message_send(s):
         logger.info(pickle.loads(message_user_data))
         print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
         return message_dict
-    elif user_choice == 'exit':
-        return False
     else:
-        return "Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': "
+        s.send(pickle.dumps(user_choice))
+        return 'exit'
 
 
 def user_activity(s):
     while True:
-        if len(usernames_auth) == 0:
+        start = input('Добро пожаловать! Хотите авторизоваться? (Y / N) ')
+        if start.upper() == 'Y':
             welcome_data = s.recv(1024)
             logger.info(pickle.loads(welcome_data))
             print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
-            user_authenticate(s)
 
-        if len(usernames_auth) == 0:
+            if len(usernames_auth) == 0:
+                user_authenticate(s)
+
+            user_presence(s)
+            a = True
+            while a:
+                if message_send(s) == 'exit':
+                    a = False
+
+            quit_data = s.recv(1024)
+            logger.info(pickle.loads(quit_data))
+            usernames_auth.clear()
+            print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт \n')
+        else:
+            print('До свидания!')
             break
-
-        user_presence(s)
-        while message_send(s):
-            message_send(s)
-
-        quit_data = s.recv(1024)
-        logger.info(pickle.loads(quit_data))
-        print('Сообщение от сервера: ', pickle.loads(quit_data), ', длиной ', len(quit_data), ' байт \n')
 
 
 if __name__ == '__main__':
