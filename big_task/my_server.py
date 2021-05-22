@@ -21,10 +21,11 @@ timestamp = int(time.time())
 
 users = {
     'KonTroAll': 'SpaceShip007',
-    'test': 'test'
+    'test': 'test',
+    'Julia': 'SpaceShuttle007'
 }
 
-usernames_friends = ['Julia']
+usernames_friends = ['Julia', 'test']
 usernames_auth = []
 room_names = ['#smalltalk']
 
@@ -58,7 +59,7 @@ def server_log_dec(func):
 # Авторизация пользователя на сервере
 @server_log_dec
 def user_authenticate(my_dict, w):
-    # logger.info('start user_authenticate!')
+    logger.info('start user_authenticate!')
     dict_auth_response = {}
     user = my_dict['user']
     for us in users.keys():
@@ -132,6 +133,7 @@ def message_send(client, w):
                 logger.info('message send!')
                 for sock in w:
                     sock.send(pickle.dumps(msg_dict))
+                    sock.send(pickle.dumps(msg_data_load['message']))
                     return msg_dict
             else:
                 msg_dict['response'] = 404
@@ -141,31 +143,12 @@ def message_send(client, w):
                     return msg_dict
 
 
-def read_requests(r_clients, all_clients):
-    """ Чтение запросов из списка клиентов
-    """
-    responses = {}  # Словарь ответов сервера вида {сокет: запрос}
-
-    for sock in r_clients:
-        try:
-            data = pickle.loads(sock.recv(1024))
-            responses[sock] = data
-            print(responses[sock])
-            return data
-        except:
-            print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
-            all_clients.remove(sock)
-
-
 def main():
     s = socket(AF_INET, SOCK_STREAM)
     s.bind(('', 8007))
     s.listen(5)
     s.settimeout(0.2)
-    # s.setblocking(False)
     logger.info('start connection!')
-    inputs = []
-    outputs = []
     clients = []
 
     while True:
