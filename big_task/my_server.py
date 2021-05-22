@@ -161,11 +161,12 @@ def main():
     s = socket(AF_INET, SOCK_STREAM)
     s.bind(('', 8007))
     s.listen(5)
-    s.setblocking(False)
+    s.settimeout(0.2)
+    # s.setblocking(False)
     logger.info('start connection!')
+    inputs = []
+    outputs = []
     clients = []
-
-    n = 3
 
     while True:
         try:
@@ -201,15 +202,11 @@ def main():
 
                 presence_user(sock, w)
 
-                user_message = pickle.loads(sock.recv(1024))
-                if user_data is None:
-                    print('wait user request')
-                else:
-                    while user_message == 'msg':
-                        message_send(sock, w)
+                while pickle.loads(sock.recv(1024)) == 'msg':
+                    message_send(sock, w)
 
-            # for sock in w:
-            #     sock.send(pickle.dumps({'action': 'quit'}))
+                for sock in w:
+                    sock.send(pickle.dumps({'action': 'quit'}))
 
 
 if __name__ == '__main__':
