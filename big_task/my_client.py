@@ -18,7 +18,8 @@ import datetime
 logger = logging.getLogger('my_client')
 
 users = {
-    'KonTroAll': 'SpaceShip007'
+    'KonTroAll': 'SpaceShip007',
+    'test': 'test'
 }
 
 usernames_auth = []
@@ -78,7 +79,7 @@ def user_authenticate(s):
     logger.info(auth_data_loads)
     print('Сообщение от сервера: ', pickle.loads(auth_data), ', длиной ', len(auth_data), ' байт')
 
-    return dict_auth
+    return auth_data_loads
 
 
 # Проверка присутствия пользователя
@@ -130,16 +131,18 @@ def message_send(s):
         return 'exit'
 
 
-def user_activity(s):
+def main(s):
+    n = 3
     while True:
-        start = input('Добро пожаловать! Хотите авторизоваться? (Y / N) ')
+        start = input('Добро пожаловать! Хотите авторизоваться? (Y / N): ')
         if start.upper() == 'Y':
             welcome_data = s.recv(1024)
             logger.info(pickle.loads(welcome_data))
             print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
             if len(usernames_auth) == 0:
-                user_authenticate(s)
+                if user_authenticate(s)['response'] == 402:
+                    break
 
             user_presence(s)
             a = True
@@ -160,5 +163,5 @@ if __name__ == '__main__':
     s = socket(AF_INET, SOCK_STREAM)
     s.connect(('localhost', 8007))
     logger.info('start connection!')
-    user_activity(s)
+    main(s)
     s.close()

@@ -20,6 +20,7 @@ timestamp = int(time.time())
 
 users = {
     'KonTroAll': 'SpaceShip007',
+    'test': 'test'
 }
 
 usernames_friends = ['Julia']
@@ -59,23 +60,24 @@ def user_authenticate(my_dict, client):
     # logger.info('start user_authenticate!')
     dict_auth_response = {}
     user = my_dict['user']
-    for us, pas in users.items():
-        for val in user.values():
-            if us == val and pas == user['password']:
-                dict_auth_response['response'] = 200
-                dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
-                print('authenticate completed!')
-                logger.info('authenticate completed!')
-                usernames_auth.append(user['user_name'])
-                client.send(pickle.dumps(dict_auth_response))
-                return dict_auth_response
-            else:
-                dict_auth_response['response'] = 402
-                dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
-                print('error!')
-                logger.info('error!')
-                client.send(pickle.dumps(dict_auth_response))
-                return dict_auth_response
+    for us in users.keys():
+        if us == user['user_name']:
+            usernames_auth.append(us)
+
+    if user['user_name'] in usernames_auth and users[user['user_name']] == user['password']:
+        dict_auth_response['response'] = 200
+        dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
+        print('authenticate completed!')
+        logger.info('authenticate completed!')
+        client.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
+    else:
+        dict_auth_response['response'] = 402
+        dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
+        print('error!')
+        logger.info('error!')
+        client.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
 
 
 # Проверка присутствия пользователя
@@ -130,7 +132,14 @@ def message_send(client):
                 return msg_dict
 
 
-def user_activity(client):
+def main():
+    s = socket(AF_INET, SOCK_STREAM)
+    s.bind(('', 8007))
+    s.listen(5)
+    logger.info('start connection!')
+    client, addr = s.accept()
+    n = 3
+
     while True:
         dict_welcome = {
             'action': 'join',
@@ -141,7 +150,8 @@ def user_activity(client):
 
         user_data = pickle.loads(client.recv(1024))
         if user_data['action'] == 'authenticate':
-            user_authenticate(user_data, client)
+            if user_authenticate(user_data, client)['response'] == 402:
+                break
 
         presence_user(client)
         while pickle.loads(client.recv(1024)) == 'msg':
@@ -149,12 +159,11 @@ def user_activity(client):
 
         client.send(pickle.dumps({'action': 'quit'}))
 
+        s.close()
+
 
 if __name__ == '__main__':
-    s = socket(AF_INET, SOCK_STREAM)
-    s.bind(('', 8007))
-    s.listen(5)
-    logger.info('start connection!')
-    client, addr = s.accept()
-    user_activity(client)
-    s.close()
+    try:
+        main()
+    except Exception as e:
+        print(e)
