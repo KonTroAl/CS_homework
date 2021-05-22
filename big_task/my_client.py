@@ -160,8 +160,11 @@ def main(s):
 
 
 if __name__ == '__main__':
-    s = socket(AF_INET, SOCK_STREAM)
-    s.connect(('localhost', 8007))
-    logger.info('start connection!')
-    main(s)
-    s.close()
+    try:
+        s = socket(AF_INET, SOCK_STREAM)
+        s.connect(('localhost', 8007))
+        logger.info('start connection!')
+        main(s)
+        s.close()
+    except Exception as e:
+        print(e)
