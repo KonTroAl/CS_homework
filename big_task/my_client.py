@@ -19,7 +19,9 @@ logger = logging.getLogger('my_client')
 
 users = {
     'KonTroAll': 'SpaceShip007',
-    'test': 'test'
+    'test': 'test',
+    'test2': 'test2',
+    'Julia': 'SpaceShuttle007'
 }
 
 usernames_auth = []
@@ -107,9 +109,8 @@ def user_presence(s):
 # Отправка сообщения другому пользователю
 @client_log_dec
 def message_send(s):
-    user_choice = input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ")
-    if user_choice == 'msg':
-        s.send(pickle.dumps(user_choice))
+    if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
+        # s.send(pickle.dumps('msg'))
         to = input('Кому отправить сообщение: ')
         message = input('Enter message: ')
         logger.info('start message_to_user!')
@@ -126,9 +127,8 @@ def message_send(s):
         logger.info(pickle.loads(message_user_data))
         print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
         return message_dict
-    else:
-        s.send(pickle.dumps(user_choice))
-        return 'exit'
+    s.send(pickle.dumps('exit'))
+    return 'exit'
 
 
 def main(s):
@@ -145,6 +145,7 @@ def main(s):
                     break
 
             user_presence(s)
+
             a = True
             while a:
                 if message_send(s) == 'exit':

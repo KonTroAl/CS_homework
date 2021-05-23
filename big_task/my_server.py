@@ -22,6 +22,7 @@ timestamp = int(time.time())
 users = {
     'KonTroAll': 'SpaceShip007',
     'test': 'test',
+    'test2': 'test2',
     'Julia': 'SpaceShuttle007'
 }
 
@@ -102,15 +103,15 @@ def presence_user(client, w):
 
 # Отправка сообщения другому пользователю
 @server_log_dec
-def message_send(client, w):
-    msg_data = client.recv(1024)
-    msg_data_load = pickle.loads(msg_data)
+def message_send(my_dict, w):
+    # msg_data = client.recv(1024)
+    # msg_data_load = pickle.loads(msg_data)
     msg_dict = {
         'time': timestamp
     }
-    if list(msg_data_load['to'])[0].isalpha():
+    if list(my_dict['to'])[0].isalpha():
         for i in usernames_friends:
-            if msg_data_load['to'] == i:
+            if my_dict['to'] == i:
                 msg_dict['response'] = 200
                 msg_dict['alert'] = dict_signals[msg_dict['response']]
                 print('message send!')
@@ -127,13 +128,13 @@ def message_send(client, w):
                     return msg_dict
     else:
         for i in room_names:
-            if msg_data_load['to'] == i:
+            if my_dict['to'] == i:
                 msg_dict['response'] = 200
                 print('message send!')
                 logger.info('message send!')
                 for sock in w:
                     sock.send(pickle.dumps(msg_dict))
-                    sock.send(pickle.dumps(msg_data_load['message']))
+                    sock.send(pickle.dumps(my_dict['message']))
                     return msg_dict
             else:
                 msg_dict['response'] = 404
@@ -144,19 +145,19 @@ def message_send(client, w):
 
 
 def read_requests(r_clients, all_clients):
-   """ Чтение запросов из списка клиентов
-   """
-   responses = {}  # Словарь ответов сервера вида {сокет: запрос}
+    """ Чтение запросов из списка клиентов
+    """
+    responses = {}  # Словарь ответов сервера вида {сокет: запрос}
 
-   for sock in r_clients:
-       try:
-           data = pickle.loads(sock.recv(1024))
-           responses[sock] = data
-       except:
-           print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
-           all_clients.remove(sock)
+    for sock in r_clients:
+        try:
+            data = pickle.loads(sock.recv(1024))
+            responses[sock] = data
+        except:
+            print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+            all_clients.remove(sock)
 
-   return responses
+    return responses
 
 
 def main():
@@ -166,8 +167,6 @@ def main():
     s.settimeout(0.2)
     logger.info('start connection!')
     clients = []
-
-    a = True
 
     while True:
         try:
@@ -194,17 +193,17 @@ def main():
                 pass
 
             requests = read_requests(r, clients)
-
-            for sock in w:
-                if requests is None:
-                    print('wait user request')
-                elif requests[sock]['action'] == 'authenticate':
-                    if user_authenticate(requests[sock], w)['response'] == 402:
-                        break
-                    presence_user(sock, w)
-                elif requests[sock] == 'msg':
-                    while pickle.loads(sock.recv(1024)) == 'msg':
-                        message_send(sock, w)
+            if requests:
+                for sock in w:
+                    if requests is None:
+                        print('wait user request')
+                    elif requests[sock]['action'] == 'authenticate':
+                        if user_authenticate(requests[sock], w)['response'] == 402:
+                            break
+                        presence_user(sock, w)
+                        requests.clear()
+                    elif requests[sock]['action'] == 'msg':
+                        message_send(requests[sock], w)
                 #
                 # for sock in w:
                 #     sock.send(pickle.dumps({'action': 'quit'}))
