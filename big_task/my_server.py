@@ -143,6 +143,22 @@ def message_send(client, w):
                     return msg_dict
 
 
+def read_requests(r_clients, all_clients):
+   """ Чтение запросов из списка клиентов
+   """
+   responses = {}  # Словарь ответов сервера вида {сокет: запрос}
+
+   for sock in r_clients:
+       try:
+           data = pickle.loads(sock.recv(1024))
+           responses[sock] = data
+       except:
+           print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+           all_clients.remove(sock)
+
+   return responses
+
+
 def main():
     s = socket(AF_INET, SOCK_STREAM)
     s.bind(('', 8007))
@@ -150,6 +166,8 @@ def main():
     s.settimeout(0.2)
     logger.info('start connection!')
     clients = []
+
+    a = True
 
     while True:
         try:
@@ -166,7 +184,7 @@ def main():
                 'alert': dict_signals[100]
             }
 
-            client.send(pickle.dumps(dict_welcome))
+            # client.send(pickle.dumps(dict_welcome))
         finally:
             r = []
             w = []
@@ -175,21 +193,21 @@ def main():
             except:
                 pass
 
-            for sock in r:
-                user_data = pickle.loads(sock.recv(1024))
-                if user_data is None:
+            requests = read_requests(r, clients)
+
+            for sock in w:
+                if requests is None:
                     print('wait user request')
-                elif user_data['action'] == 'authenticate':
-                    if user_authenticate(user_data, w)['response'] == 402:
+                elif requests[sock]['action'] == 'authenticate':
+                    if user_authenticate(requests[sock], w)['response'] == 402:
                         break
-
-                presence_user(sock, w)
-
-                while pickle.loads(sock.recv(1024)) == 'msg':
-                    message_send(sock, w)
-
-                for sock in w:
-                    sock.send(pickle.dumps({'action': 'quit'}))
+                    presence_user(sock, w)
+                elif requests[sock] == 'msg':
+                    while pickle.loads(sock.recv(1024)) == 'msg':
+                        message_send(sock, w)
+                #
+                # for sock in w:
+                #     sock.send(pickle.dumps({'action': 'quit'}))
 
 
 if __name__ == '__main__':

@@ -136,9 +136,9 @@ def main(s):
     while True:
         start = input('Добро пожаловать! Хотите авторизоваться? (Y / N): ')
         if start.upper() == 'Y':
-            welcome_data = s.recv(1024)
-            logger.info(pickle.loads(welcome_data))
-            print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
+            # welcome_data = s.recv(1024)
+            # logger.info(pickle.loads(welcome_data))
+            # print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
 
             if len(usernames_auth) == 0:
                 if user_authenticate(s)['response'] == 402:
