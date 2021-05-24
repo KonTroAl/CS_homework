@@ -61,9 +61,7 @@ def client_log_dec(func):
 
 # Авторизация пользователя на сервере
 @client_log_dec
-def user_authenticate(s):
-    username = input('Enter your login: ')
-    password = input('Enter your password: ')
+def user_authenticate(s, username, password):
     logger.info('start user_authenticate!')
     dict_auth = {
         'action': 'authenticate',
@@ -96,7 +94,7 @@ def user_presence(s):
             'time': timestamp,
             'type': 'status',
             'user': {
-                'username': 'KonTroAll',
+                'username': usernames_auth[0],
                 'status': 'I am still here!'
             }
         }
@@ -108,27 +106,54 @@ def user_presence(s):
 
 # Отправка сообщения другому пользователю
 @client_log_dec
-def message_send(s):
-    if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
-        # s.send(pickle.dumps('msg'))
-        to = input('Кому отправить сообщение: ')
-        message = input('Enter message: ')
-        logger.info('start message_to_user!')
-        message_dict = {
-            'action': 'msg',
-            'time': timestamp,
-            'to': to,
-            'from': usernames_auth[0],
-            'encoding': 'utf-8',
-            'message': message
-        }
-        s.send(pickle.dumps(message_dict))
-        message_user_data = s.recv(1024)
-        logger.info(pickle.loads(message_user_data))
-        print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
-        return message_dict
-    s.send(pickle.dumps('exit'))
-    return 'exit'
+def message_send_user(s, to, message):
+    logger.info('start message_to_user!')
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': to,
+        'from': usernames_auth[0],
+        'encoding': 'utf-8',
+        'message': message
+    }
+    s.send(pickle.dumps(message_dict))
+    message_user_data = s.recv(1024)
+    logger.info(pickle.loads(message_user_data))
+    print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
+    return message_dict
+
+
+@client_log_dec
+def message_send_room(s, to):
+    a = True
+    global turn
+    turn = True
+    print('Для выхода из комнаты введите: q')
+    while a:
+        if turn:
+            message = input('Enter message: ')
+            if message.upper() == 'Q':
+                print('Выход из чата')
+                break
+            logger.info('start message_to_user!')
+            message_dict = {
+                'action': 'msg',
+                'time': timestamp,
+                'to': to,
+                'from': usernames_auth[0],
+                'encoding': 'utf-8',
+                'message': message
+            }
+            s.send(pickle.dumps(message_dict))
+            message_room_data_load_2 = pickle.loads(s.recv(1024))
+            logger.info(message_room_data_load_2)
+            print(f'{message_room_data_load_2["to"]} from {message_room_data_load_2["from"]}: {message_room_data_load_2["message"]}')
+            turn = False
+    # return message_dict
+        message_room_data_load = pickle.loads(s.recv(1024))
+        logger.info(message_room_data_load)
+        print(f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
+        turn = True
 
 
 def main(s):
@@ -136,20 +161,28 @@ def main(s):
     while True:
         start = input('Добро пожаловать! Хотите авторизоваться? (Y / N): ')
         if start.upper() == 'Y':
-            # welcome_data = s.recv(1024)
-            # logger.info(pickle.loads(welcome_data))
-            # print('Сообщение от сервера: ', pickle.loads(welcome_data), ', длиной ', len(welcome_data), ' байт')
-
-            if len(usernames_auth) == 0:
-                if user_authenticate(s)['response'] == 402:
+            username = input('Enter your login: ')
+            password = input('Enter your password: ')
+            if username in usernames_auth:
+                auth_dict = {
+                    'time': timestamp,
+                    'response': 409,
+                    'message': dict_signals[409]
+                }
+                print(auth_dict)
+            else:
+                if user_authenticate(s, username, password)['response'] == 402:
                     break
 
             user_presence(s)
 
-            a = True
-            while a:
-                if message_send(s) == 'exit':
-                    a = False
+            if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
+                to = input('Кому отправить сообщение: ')
+                if to[0].isalpha():
+                    message = input('Enter message: ')
+                    message_send_user(s, to, message)
+                else:
+                    message_send_room(s, to)
 
             quit_data = s.recv(1024)
             logger.info(pickle.loads(quit_data))

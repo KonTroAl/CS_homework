@@ -59,7 +59,7 @@ def server_log_dec(func):
 
 # Авторизация пользователя на сервере
 @server_log_dec
-def user_authenticate(my_dict, w):
+def user_authenticate(my_dict, sock):
     logger.info('start user_authenticate!')
     dict_auth_response = {}
     user = my_dict['user']
@@ -72,28 +72,26 @@ def user_authenticate(my_dict, w):
         dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
         print('authenticate completed!')
         logger.info('authenticate completed!')
-        for client in w:
-            client.send(pickle.dumps(dict_auth_response))
-            return dict_auth_response
+        sock.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
     else:
         dict_auth_response['response'] = 402
         dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
         print('error!')
         logger.info('error!')
-        for client in w:
-            client.send(pickle.dumps(dict_auth_response))
-            return dict_auth_response
+        sock.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
 
 
 # Проверка присутствия пользователя
 @server_log_dec
-def presence_user(client, w):
+def presence_user(client, sock):
     dict_probe = {
         'action': 'probe',
         'time': timestamp
     }
-    for sock in w:
-        sock.send(pickle.dumps(dict_probe))
+
+    sock.send(pickle.dumps(dict_probe))
 
     pre_data = client.recv(1024)
     pre_data_load = pickle.loads(pre_data)
@@ -103,9 +101,7 @@ def presence_user(client, w):
 
 # Отправка сообщения другому пользователю
 @server_log_dec
-def message_send(my_dict, w):
-    # msg_data = client.recv(1024)
-    # msg_data_load = pickle.loads(msg_data)
+def message_send(my_dict, sock, w):
     msg_dict = {
         'time': timestamp
     }
@@ -116,32 +112,31 @@ def message_send(my_dict, w):
                 msg_dict['alert'] = dict_signals[msg_dict['response']]
                 print('message send!')
                 logger.info('message send!')
-                for sock in w:
-                    sock.send(pickle.dumps(msg_dict))
-                    return msg_dict
+                sock.send(pickle.dumps(msg_dict))
+                return msg_dict
             else:
                 msg_dict['response'] = 404
                 msg_dict['alert'] = dict_signals[msg_dict['response']]
                 logger.info('пользователь/чат отсутствует на сервере')
-                for sock in w:
-                    sock.send(pickle.dumps(msg_dict))
-                    return msg_dict
+                sock.send(pickle.dumps(msg_dict))
+                return msg_dict
     else:
-        for i in room_names:
-            if my_dict['to'] == i:
-                msg_dict['response'] = 200
-                print('message send!')
-                logger.info('message send!')
-                for sock in w:
-                    sock.send(pickle.dumps(msg_dict))
-                    sock.send(pickle.dumps(my_dict['message']))
-                    return msg_dict
-            else:
-                msg_dict['response'] = 404
-                logger.info('пользователь/чат отсутствует на сервере')
-                for sock in w:
-                    sock.send(pickle.dumps(msg_dict))
-                    return msg_dict
+        if my_dict['to'] in room_names:
+            msg_dict['response'] = 200
+            msg_dict['to'] = my_dict['to']
+            msg_dict['from'] = my_dict['from']
+            msg_dict['message'] = my_dict['message']
+            print('message send!')
+            logger.info('message send!')
+            for val in w:
+                val.send(pickle.dumps(msg_dict))
+                # return msg_dict
+        else:
+            msg_dict['response'] = 404
+            logger.info('пользователь/чат отсутствует на сервере')
+            for val in w:
+                val.send(pickle.dumps(msg_dict))
+                return msg_dict
 
 
 def read_requests(r_clients, all_clients):
@@ -177,13 +172,6 @@ def main():
             print("Получен запрос на соединение от %s" % str(addr))
             clients.append(client)
 
-            dict_welcome = {
-                'action': 'join',
-                'response': 100,
-                'alert': dict_signals[100]
-            }
-
-            # client.send(pickle.dumps(dict_welcome))
         finally:
             r = []
             w = []
@@ -195,18 +183,16 @@ def main():
             requests = read_requests(r, clients)
             if requests:
                 for sock in w:
-                    if requests is None:
-                        print('wait user request')
-                    elif requests[sock]['action'] == 'authenticate':
-                        if user_authenticate(requests[sock], w)['response'] == 402:
-                            break
-                        presence_user(sock, w)
-                        requests.clear()
-                    elif requests[sock]['action'] == 'msg':
-                        message_send(requests[sock], w)
-                #
-                # for sock in w:
-                #     sock.send(pickle.dumps({'action': 'quit'}))
+                    if sock in requests:
+                        if requests[sock]['action'] == 'authenticate':
+                            if user_authenticate(requests[sock], sock)['response'] == 402:
+                                break
+                            presence_user(sock, sock)
+                            requests.clear()
+                        elif requests[sock]['action'] == 'msg':
+                            message_send(requests[sock], sock, w)
+            # for sock in w:
+            #     sock.send(pickle.dumps({'action': 'quit'}))
 
 
 if __name__ == '__main__':
