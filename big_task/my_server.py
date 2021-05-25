@@ -14,6 +14,7 @@ import logging
 from functools import wraps
 import datetime
 import select
+import multiprocessing
 
 logger = logging.getLogger('my_server')
 
@@ -128,15 +129,15 @@ def message_send(my_dict, sock, w):
             msg_dict['message'] = my_dict['message']
             print('message send!')
             logger.info('message send!')
+            msg.put(msg_dict)
             for val in w:
-                val.send(pickle.dumps(msg_dict))
+                val.send(pickle.dumps(msg))
                 # return msg_dict
         else:
             msg_dict['response'] = 404
             logger.info('пользователь/чат отсутствует на сервере')
-            for val in w:
-                val.send(pickle.dumps(msg_dict))
-                return msg_dict
+            sock.send(pickle.dumps(msg_dict))
+            return msg_dict
 
 
 def read_requests(r_clients, all_clients):
@@ -190,6 +191,8 @@ def main():
                             presence_user(sock, sock)
                             requests.clear()
                         elif requests[sock]['action'] == 'msg':
+                            # На данном этапе реализовать обработку очереди и
+                            # постановку новых данных в очередь на обработку
                             message_send(requests[sock], sock, w)
             # for sock in w:
             #     sock.send(pickle.dumps({'action': 'quit'}))

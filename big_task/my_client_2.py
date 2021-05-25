@@ -14,6 +14,7 @@ import pickle
 import logging
 from functools import wraps
 import datetime
+from threading import Thread
 
 logger = logging.getLogger('my_client')
 
@@ -126,34 +127,35 @@ def message_send_user(s, to, message):
 @client_log_dec
 def message_send_room(s, to):
     a = True
-    global turn
-    turn = False
+    # global turn
+    # turn = True
     print('Для выхода из комнаты введите: q')
     while a:
-        if turn:
-            message = input('Enter message: ')
-            if message.upper() == 'Q':
-                print('Выход из чата')
-                break
-            logger.info('start message_to_user!')
-            message_dict = {
-                'action': 'msg',
-                'time': timestamp,
-                'to': to,
-                'from': usernames_auth[0],
-                'encoding': 'utf-8',
-                'message': message
-            }
-            s.send(pickle.dumps(message_dict))
-            message_room_data_load_2 = pickle.loads(s.recv(1024))
-            logger.info(message_room_data_load_2)
-            print(f'{message_room_data_load_2["to"]} from {message_room_data_load_2["from"]}: {message_room_data_load_2["message"]}')
-            turn = False
-    # return message_dict
-        message_room_data_load = pickle.loads(s.recv(1024))
-        logger.info(message_room_data_load)
-        print(f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
-        turn = True
+        # if turn:
+        message = input('Enter message: ')
+        if message.upper() == 'Q':
+            print('Выход из чата')
+            break
+        logger.info('start message_to_user!')
+        message_dict = {
+            'action': 'msg',
+            'time': timestamp,
+            'to': to,
+            'from': usernames_auth[0],
+            'encoding': 'utf-8',
+            'message': message
+        }
+        s.send(pickle.dumps(message_dict))
+        msg = Thread(target=message_recv, args=(s, ))
+        msg.start()
+        msg.join()
+
+    # turn = True
+
+def message_recv(s):
+    message_room_data_load = pickle.loads(s.recv(1024))
+    logger.info(message_room_data_load)
+    print(f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
 
 
 

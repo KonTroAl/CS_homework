@@ -14,6 +14,9 @@ import pickle
 import logging
 from functools import wraps
 import datetime
+from threading import Thread
+from queue import Queue
+import multiprocessing
 
 logger = logging.getLogger('my_client')
 
@@ -124,36 +127,39 @@ def message_send_user(s, to, message):
 
 
 @client_log_dec
-def message_send_room(s, to):
+def message_send_room(s, to, msg):
     a = True
-    global turn
-    turn = True
+    # global turn
+    # turn = True
     print('Для выхода из комнаты введите: q')
     while a:
-        if turn:
-            message = input('Enter message: ')
-            if message.upper() == 'Q':
-                print('Выход из чата')
-                break
-            logger.info('start message_to_user!')
-            message_dict = {
-                'action': 'msg',
-                'time': timestamp,
-                'to': to,
-                'from': usernames_auth[0],
-                'encoding': 'utf-8',
-                'message': message
-            }
-            s.send(pickle.dumps(message_dict))
-            message_room_data_load_2 = pickle.loads(s.recv(1024))
-            logger.info(message_room_data_load_2)
-            print(f'{message_room_data_load_2["to"]} from {message_room_data_load_2["from"]}: {message_room_data_load_2["message"]}')
-            turn = False
-    # return message_dict
+        # Для реализации необходимо передавать в аргументах очередь, которая была создана при
+        # инициализации multiprocessing
+        message = input('Enter message: ')
+        if message.upper() == 'Q':
+            print('Выход из чата')
+            break
+        logger.info('start message_to_user!')
+        message_dict = {
+            'action': 'msg',
+            'time': timestamp,
+            'to': to,
+            'from': usernames_auth[0],
+            'encoding': 'utf-8',
+            'message': message
+        }
+
+        s.send(pickle.dumps(message_dict))
+
+    # turn = True
+
+def message_recv(s, msg):
+    while True:
         message_room_data_load = pickle.loads(s.recv(1024))
-        logger.info(message_room_data_load)
-        print(f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
-        turn = True
+        message_room_data = message_room_data_load.get()
+        logger.info(message_room_data)
+        print(f'{message_room_data["to"]} from {message_room_data["from"]}: {message_room_data["message"]}')
+
 
 
 def main(s):
@@ -182,7 +188,12 @@ def main(s):
                     message = input('Enter message: ')
                     message_send_user(s, to, message)
                 else:
-                    message_send_room(s, to)
+                    msg = multiprocessing.JoinableQueue()
+                    msg_p = multiprocessing.Process(target=message_recv, args=(s, msg,))
+                    msg_p.daemon = True
+                    msg_p.start()
+                    message_send_room(s, to, msg)
+                    msg_p.join()
 
             quit_data = s.recv(1024)
             logger.info(pickle.loads(quit_data))
