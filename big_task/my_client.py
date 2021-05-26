@@ -128,7 +128,6 @@ def message_send_user(s, to, message):
 
 @client_log_dec
 def message_send_room(s, to, message):
-    # while True:
     logger.info('start message_to_user!')
     message_dict = {
         'action': 'msg',
@@ -142,18 +141,26 @@ def message_send_room(s, to, message):
     s.send(pickle.dumps(message_dict))
 
 
-# turn = True
-
 def message_recv(s):
     while True:
         message_room_data_load = pickle.loads(s.recv(1024))
+        if message_room_data_load['message'] == 'q':
+            break
         logger.info(message_room_data_load)
         print(
             f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
 
 
+def logout(s):
+    logout_dict = {
+        'action': 'logout',
+        'time': timestamp,
+        'from': usernames_auth[0]
+    }
+    s.send(pickle.dumps(logout_dict))
+
+
 def main(s):
-    n = 3
     while True:
         start = input('Добро пожаловать! Хотите авторизоваться? (Y / N): ')
         if start.upper() == 'Y':
@@ -175,21 +182,22 @@ def main(s):
             if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
                 print('Для выхода из чата введите: q')
                 to = input('Кому отправить сообщение: ')
-                msg = Thread(target=message_recv, args=(s,))
-                msg.daemon = True
+                msg = Thread(target=message_recv, args=(s, ))
+                # msg.daemon = True
                 msg.start()
                 while True:
                     message = input('Enter message: ')
-                    print('')
                     if message.upper() == 'Q':
                         print('Выход из чата')
+                        message_send_room(s, to, 'q')
                         break
                     if to[0].isalpha():
                         message_send_user(s, to, message)
                     else:
                         message_send_room(s, to, message)
-                msg.join()
+                # msg.join(timeout=1)
 
+            logout(s)
             quit_data = s.recv(1024)
             logger.info(pickle.loads(quit_data))
             usernames_auth.clear()

@@ -139,11 +139,16 @@ def message_room(my_dict, sock):
         sock.send(pickle.dumps(msg_dict))
         return msg_dict
 
-def message_room_send(my_dict, w):
+
+def message_room_send(my_dict, w, sock):
+    if my_dict['message'].upper() == 'Q':
+        sock.send(pickle.dumps(my_dict))
+        return ''
     for val in w:
         val.send(pickle.dumps(my_dict))
     print('message send!')
     logger.info('message send!')
+
 
 def read_requests(r_clients, all_clients):
     """ Чтение запросов из списка клиентов
@@ -192,15 +197,17 @@ def main():
                     if sock in requests:
                         if requests[sock]['action'] == 'authenticate':
                             if user_authenticate(requests[sock], sock)['response'] == 402:
+                                usernames_auth.remove(requests[sock]['user']['user_name'])
                                 break
                             presence_user(sock, sock)
-                            requests.clear()
+                            # requests.clear()
                         elif requests[sock]['action'] == 'msg':
                             if requests[sock]['to'][0].isalpha():
-                                message_room_send(message_send(requests[sock], sock), w)
-                            message_room_send(message_room(requests[sock], sock), w)
-            # for sock in w:
-            #     sock.send(pickle.dumps({'action': 'quit'}))
+                                message_room_send(message_send(requests[sock], sock), w, sock)
+                            message_room_send(message_room(requests[sock], sock), w, sock)
+                        elif requests[sock]['action'] == 'logout':
+                            usernames_auth.remove(requests[sock]['user']['user_name'])
+                            sock.send(pickle.dumps({'action': 'quit'}))
 
 
 if __name__ == '__main__':
