@@ -158,6 +158,7 @@ def logout(s):
         'from': usernames_auth[0]
     }
     s.send(pickle.dumps(logout_dict))
+    return logout_dict
 
 
 def main(s):
@@ -195,7 +196,7 @@ def main(s):
                         message_send_user(s, to, message)
                     else:
                         message_send_room(s, to, message)
-                # msg.join(timeout=1)
+                msg.join(timeout=1)
 
             logout(s)
             quit_data = s.recv(1024)

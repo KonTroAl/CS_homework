@@ -206,7 +206,7 @@ def main():
                                 message_room_send(message_send(requests[sock], sock), w, sock)
                             message_room_send(message_room(requests[sock], sock), w, sock)
                         elif requests[sock]['action'] == 'logout':
-                            usernames_auth.remove(requests[sock]['user']['user_name'])
+                            usernames_auth.remove(requests[sock]['from'])
                             sock.send(pickle.dumps({'action': 'quit'}))
 
 
