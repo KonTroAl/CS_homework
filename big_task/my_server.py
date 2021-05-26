@@ -102,7 +102,7 @@ def presence_user(client, sock):
 
 # Отправка сообщения другому пользователю
 @server_log_dec
-def message_send(my_dict, sock, w):
+def message_send(my_dict, sock):
     msg_dict = {
         'time': timestamp
     }
@@ -121,24 +121,29 @@ def message_send(my_dict, sock, w):
                 logger.info('пользователь/чат отсутствует на сервере')
                 sock.send(pickle.dumps(msg_dict))
                 return msg_dict
-    else:
-        if my_dict['to'] in room_names:
-            msg_dict['response'] = 200
-            msg_dict['to'] = my_dict['to']
-            msg_dict['from'] = my_dict['from']
-            msg_dict['message'] = my_dict['message']
-            print('message send!')
-            logger.info('message send!')
-            msg.put(msg_dict)
-            for val in w:
-                val.send(pickle.dumps(msg))
-                # return msg_dict
-        else:
-            msg_dict['response'] = 404
-            logger.info('пользователь/чат отсутствует на сервере')
-            sock.send(pickle.dumps(msg_dict))
-            return msg_dict
 
+
+def message_room(my_dict, sock):
+    msg_dict = {
+        'time': timestamp
+    }
+    if my_dict['to'] in room_names:
+        msg_dict['response'] = 200
+        msg_dict['to'] = my_dict['to']
+        msg_dict['from'] = my_dict['from']
+        msg_dict['message'] = my_dict['message']
+        return msg_dict
+    else:
+        msg_dict['response'] = 404
+        logger.info('пользователь/чат отсутствует на сервере')
+        sock.send(pickle.dumps(msg_dict))
+        return msg_dict
+
+def message_room_send(my_dict, w):
+    for val in w:
+        val.send(pickle.dumps(my_dict))
+    print('message send!')
+    logger.info('message send!')
 
 def read_requests(r_clients, all_clients):
     """ Чтение запросов из списка клиентов
@@ -191,9 +196,9 @@ def main():
                             presence_user(sock, sock)
                             requests.clear()
                         elif requests[sock]['action'] == 'msg':
-                            # На данном этапе реализовать обработку очереди и
-                            # постановку новых данных в очередь на обработку
-                            message_send(requests[sock], sock, w)
+                            if requests[sock]['to'][0].isalpha():
+                                message_room_send(message_send(requests[sock], sock), w)
+                            message_room_send(message_room(requests[sock], sock), w)
             # for sock in w:
             #     sock.send(pickle.dumps({'action': 'quit'}))
 

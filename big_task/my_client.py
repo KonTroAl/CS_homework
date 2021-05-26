@@ -127,39 +127,29 @@ def message_send_user(s, to, message):
 
 
 @client_log_dec
-def message_send_room(s, to, msg):
-    a = True
-    # global turn
-    # turn = True
-    print('Для выхода из комнаты введите: q')
-    while a:
-        # Для реализации необходимо передавать в аргументах очередь, которая была создана при
-        # инициализации multiprocessing
-        message = input('Enter message: ')
-        if message.upper() == 'Q':
-            print('Выход из чата')
-            break
-        logger.info('start message_to_user!')
-        message_dict = {
-            'action': 'msg',
-            'time': timestamp,
-            'to': to,
-            'from': usernames_auth[0],
-            'encoding': 'utf-8',
-            'message': message
-        }
+def message_send_room(s, to, message):
+    # while True:
+    logger.info('start message_to_user!')
+    message_dict = {
+        'action': 'msg',
+        'time': timestamp,
+        'to': to,
+        'from': usernames_auth[0],
+        'encoding': 'utf-8',
+        'message': message,
+    }
 
-        s.send(pickle.dumps(message_dict))
+    s.send(pickle.dumps(message_dict))
 
-    # turn = True
 
-def message_recv(s, msg):
+# turn = True
+
+def message_recv(s):
     while True:
         message_room_data_load = pickle.loads(s.recv(1024))
-        message_room_data = message_room_data_load.get()
-        logger.info(message_room_data)
-        print(f'{message_room_data["to"]} from {message_room_data["from"]}: {message_room_data["message"]}')
-
+        logger.info(message_room_data_load)
+        print(
+            f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
 
 
 def main(s):
@@ -183,17 +173,22 @@ def main(s):
             user_presence(s)
 
             if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
+                print('Для выхода из чата введите: q')
                 to = input('Кому отправить сообщение: ')
-                if to[0].isalpha():
+                msg = Thread(target=message_recv, args=(s,))
+                msg.daemon = True
+                msg.start()
+                while True:
                     message = input('Enter message: ')
-                    message_send_user(s, to, message)
-                else:
-                    msg = multiprocessing.JoinableQueue()
-                    msg_p = multiprocessing.Process(target=message_recv, args=(s, msg,))
-                    msg_p.daemon = True
-                    msg_p.start()
-                    message_send_room(s, to, msg)
-                    msg_p.join()
+                    print('')
+                    if message.upper() == 'Q':
+                        print('Выход из чата')
+                        break
+                    if to[0].isalpha():
+                        message_send_user(s, to, message)
+                    else:
+                        message_send_room(s, to, message)
+                msg.join()
 
             quit_data = s.recv(1024)
             logger.info(pickle.loads(quit_data))

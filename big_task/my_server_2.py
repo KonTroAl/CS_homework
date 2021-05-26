@@ -13,6 +13,8 @@ import pickle
 import logging
 from functools import wraps
 import datetime
+import select
+import multiprocessing
 
 logger = logging.getLogger('my_server')
 
@@ -20,9 +22,13 @@ timestamp = int(time.time())
 
 users = {
     'KonTroAll': 'SpaceShip007',
+    'test': 'test',
+    'test2': 'test2',
+    'Julia': 'SpaceShuttle007'
 }
 
-usernames_friends = ['Julia']
+usernames_friends = ['Julia', 'test']
+usernames_auth = []
 room_names = ['#smalltalk']
 
 dict_signals = {
@@ -41,162 +47,160 @@ dict_signals = {
     500: 'ошибка сервера'
 }
 
-auth = False
 
 def server_log_dec(func):
     @wraps(func)
-    def call(*args, ** kwargs):
+    def call(*args, **kwargs):
         res = func(*args, **kwargs)
         logger.info(f'{datetime.datetime.now()} Call {func.__name__}: {args}, {kwargs}')
         return res
+
     return call
 
 
 # Авторизация пользователя на сервере
 @server_log_dec
-def user_authenticate(my_dict):
-    # logger.info('start user_authenticate!')
-    if my_dict['action'] == 'authenticate':
-        user = my_dict['user']
-        for us, pas in users.items():
-            for val in user.values():
-                if us == val and pas == user['password']:
-                    dict_auth_response = {
-                        'response': 200,
-                        'alert': dict_signals[200]
-                    }
-                    print('authenticate completed!')
-                    logger.info('authenticate completed!')
-                    return dict_auth_response
-                else:
-                    dict_auth_response = {
-                        'response': 402,
-                        'error': dict_signals[402]
-                    }
-                    print('error!')
-                    logger.info('error!')
-                    return dict_auth_response
-    # else:
-    #     dict_auth_response = {
-    #         'response': 409,
-    #         'error': dict_signals[409]
-    #     }
-    #     print('Someone is already connected with the given user name!')
-    #     return dict_auth_response
+def user_authenticate(my_dict, sock):
+    logger.info('start user_authenticate!')
+    dict_auth_response = {}
+    user = my_dict['user']
+    for us in users.keys():
+        if us == user['user_name']:
+            usernames_auth.append(us)
+
+    if user['user_name'] in usernames_auth and users[user['user_name']] == user['password']:
+        dict_auth_response['response'] = 200
+        dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
+        print('authenticate completed!')
+        logger.info('authenticate completed!')
+        sock.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
+    else:
+        dict_auth_response['response'] = 402
+        dict_auth_response['alert'] = dict_signals[dict_auth_response['response']]
+        print('error!')
+        logger.info('error!')
+        sock.send(pickle.dumps(dict_auth_response))
+        return dict_auth_response
 
 
 # Проверка присутствия пользователя
 @server_log_dec
-def presence_user(my_dict):
-    # logger.info('start presence_user!')
-    print('Сообщение от клиента: ', my_dict, ', длиной ', len(my_dict), ' байт')
-    return my_dict['action']
+def presence_user(client, sock):
+    dict_probe = {
+        'action': 'probe',
+        'time': timestamp
+    }
+
+    sock.send(pickle.dumps(dict_probe))
+
+    pre_data = client.recv(1024)
+    pre_data_load = pickle.loads(pre_data)
+    print('Сообщение от клиента: ', pre_data_load, ', длиной ', len(pre_data), ' байт')
+    return pre_data_load['action']
 
 
 # Отправка сообщения другому пользователю
 @server_log_dec
-def message_to_user(my_dict):
-    # logger.info('start message_to_user!')
-    if my_dict['action'] == 'msg':
-        if list(my_dict['to'])[0].isalpha():
-            for i in usernames_friends:
-                if my_dict['to'] == i:
-                    msg_dict = {
-                        'response': 200,
-                        'time': timestamp,
-                        'alert': dict_signals[200]
-                    }
-                    print('message send!')
-                    logger.info('message send!')
-                    return msg_dict
-                else:
-                    msg_dict = {
-                        'response': 404,
-                        'time': timestamp,
-                        'alert': dict_signals[404]
-                    }
-                    logger.info('пользователь/чат отсутствует на сервере')
-                    return msg_dict
-
-
-# Отправка сообщения в чат
-@server_log_dec
-def message_to_room(my_dict):
-    # logger.info('start message_to_room!')
-    if my_dict['action'] == 'msg':
-        for i in room_names:
-            if i == my_dict['to']:
-                room_dict = {
-                    'response': 200,
-                    'time': timestamp,
-                    'alert': dict_signals[200]
-                }
+def message_send(my_dict, sock, w):
+    msg_dict = {
+        'time': timestamp
+    }
+    if list(my_dict['to'])[0].isalpha():
+        for i in usernames_friends:
+            if my_dict['to'] == i:
+                msg_dict['response'] = 200
+                msg_dict['alert'] = dict_signals[msg_dict['response']]
                 print('message send!')
                 logger.info('message send!')
-                return room_dict
+                sock.send(pickle.dumps(msg_dict))
+                return msg_dict
             else:
-                room_dict = {
-                    'response': 404,
-                    'time': timestamp,
-                    'alert': dict_signals[404]
-                }
+                msg_dict['response'] = 404
+                msg_dict['alert'] = dict_signals[msg_dict['response']]
                 logger.info('пользователь/чат отсутствует на сервере')
-                return room_dict
+                sock.send(pickle.dumps(msg_dict))
+                return msg_dict
+    else:
+        if my_dict['to'] in room_names:
+            msg_dict['response'] = 200
+            msg_dict['to'] = my_dict['to']
+            msg_dict['from'] = my_dict['from']
+            msg_dict['message'] = my_dict['message']
+            my_dict['msg'].put(msg_dict)
+            msg_dict['msg'] = my_dict['msg'].put(msg_dict)
+            for val in w:
+                val.send(pickle.dumps(msg_dict))
+            print('message send!')
+            logger.info('message send!')
+                # return msg_dict
+        else:
+            msg_dict['response'] = 404
+            logger.info('пользователь/чат отсутствует на сервере')
+            sock.send(pickle.dumps(msg_dict))
+            return msg_dict
 
 
-if __name__ == '__main__':
+def read_requests(r_clients, all_clients):
+    """ Чтение запросов из списка клиентов
+    """
+    responses = {}  # Словарь ответов сервера вида {сокет: запрос}
+
+    for sock in r_clients:
+        try:
+            data = pickle.loads(sock.recv(1024))
+            responses[sock] = data
+        except:
+            print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+            all_clients.remove(sock)
+
+    return responses
+
+
+def main():
     s = socket(AF_INET, SOCK_STREAM)
     s.bind(('', 8007))
     s.listen(5)
+    s.settimeout(0.2)
     logger.info('start connection!')
+    clients = []
 
     while True:
-        client, addr = s.accept()
-
-        dict_welcome = {
-            'action': 'join',
-            'response': 100,
-            'alert': dict_signals[100]
-        }
-        client.send(pickle.dumps(dict_welcome))
-
-        # авторизация пользователя
-        aut_data = client.recv(1024)
-        aut_dict = user_authenticate(pickle.loads(aut_data))
-        if aut_dict['response'] == 200 or 409:
-            auth = True
-        client.send(pickle.dumps(aut_dict))
-
-        # проверка присутствия
-        if auth == True:
-
-            dict_probe = {
-                'action': 'probe',
-                'time': timestamp
-            }
-            client.send(pickle.dumps(dict_probe))
-
-            pre_data = client.recv(1024)
-            presence_user(pickle.loads(pre_data))
-
-            # отправка сообщения пользователю
-            msg_for_user_data = pickle.loads(client.recv(1024))
-            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
-
-            # отправка сообщения в чат
-            msg_for_room_data = pickle.loads(client.recv(1024))
-            client.send(pickle.dumps(message_to_user(msg_for_user_data)))
-
-            # logout
-            print(pickle.loads(client.recv(1024)))
+        try:
+            client, addr = s.accept()
+        except OSError as e:
+            pass
         else:
-            dict_not_auth = {
-                'response': 401,
-                'alert': dict_signals[401]
-            }
-            client.send(pickle.dumps(dict_not_auth))
+            print("Получен запрос на соединение от %s" % str(addr))
+            clients.append(client)
 
-        # отключение от сервера
-        client.send(pickle.dumps({'action': 'quit'}))
+        finally:
+            r = []
+            w = []
+            try:
+                r, w, e = select.select(clients, clients, [])
+            except:
+                pass
 
-        client.close()
+            requests = read_requests(r, clients)
+            if requests:
+                for sock in w:
+                    if sock in requests:
+                        if requests[sock]['action'] == 'authenticate':
+                            if user_authenticate(requests[sock], sock)['response'] == 402:
+                                break
+                            presence_user(sock, sock)
+                            requests.clear()
+                        elif requests[sock]['action'] == 'msg':
+                            # На данном этапе реализовать обработку очереди и
+                            # постановку новых данных в очередь на обработку
+                            message_send(requests[sock], sock, w)
+            # for sock in w:
+            #     sock.send(pickle.dumps({'action': 'quit'}))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        print(e)
