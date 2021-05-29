@@ -1,13 +1,3 @@
-# Функции клиента:
-#     - сформировать presence-сообщение;
-#     - отправить сообщение серверу;
-#     - получить ответ сервера;
-#     - разобрать сообщение сервера;
-#     - параметры командной строки скрипта client.py <addr> [<port>]:
-#         * addr — ip-адрес сервера;
-#         * port — tcp-порт на сервере, по умолчанию 7777.
-
-
 from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
@@ -15,8 +5,6 @@ import logging
 from functools import wraps
 import datetime
 from threading import Thread
-from queue import Queue
-import multiprocessing
 
 logger = logging.getLogger('my_client')
 
@@ -120,15 +108,10 @@ def message_send_user(s, to, message):
         'message': message
     }
     s.send(pickle.dumps(message_dict))
-    message_user_data = s.recv(1024)
-    logger.info(pickle.loads(message_user_data))
-    print('Сообщение от сервера: ', pickle.loads(message_user_data), ', длиной ', len(message_user_data), ' байт')
-    return message_dict
 
 
 @client_log_dec
 def message_send_room(s, to, message):
-    # while True:
     logger.info('start message_to_user!')
     message_dict = {
         'action': 'msg',
@@ -138,22 +121,34 @@ def message_send_room(s, to, message):
         'encoding': 'utf-8',
         'message': message,
     }
-
     s.send(pickle.dumps(message_dict))
 
 
-# turn = True
-
 def message_recv(s):
     while True:
-        message_room_data_load = pickle.loads(s.recv(1024))
+        message_room_data = s.recv(1024)
+        message_room_data_load = pickle.loads(message_room_data)
+        if message_room_data_load['message'] == 'Q':
+            break
+        if message_room_data_load['to'][0].isalpha():
+            print('Сообщение от сервера: ', message_room_data_load, ', длиной ', len(message_room_data), ' байт')
+        else:
+            print(
+                f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
         logger.info(message_room_data_load)
-        print(
-            f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
+
+
+def logout(s):
+    logout_dict = {
+        'action': 'logout',
+        'time': timestamp,
+        'from': usernames_auth[0]
+    }
+    s.send(pickle.dumps(logout_dict))
+    return logout_dict
 
 
 def main(s):
-    n = 3
     while True:
         start = input('Добро пожаловать! Хотите авторизоваться? (Y / N): ')
         if start.upper() == 'Y':
@@ -172,23 +167,43 @@ def main(s):
 
             user_presence(s)
 
-            if input("Для начала общения введите команду: 'msg', чтобы выйти введите: 'exit': ") == 'msg':
-                print('Для выхода из чата введите: q')
-                to = input('Кому отправить сообщение: ')
-                msg = Thread(target=message_recv, args=(s,))
-                msg.daemon = True
-                msg.start()
-                while True:
+            msg = Thread(target=message_recv, args=(s,))
+            msg.start()
+            while True:
+                user_choice = input(
+                    "Введите, что вы хотите сделать (П/Отправить сообщение пользователю, Г/Отправить группе, ВГ/Вступить в группу). Чтобы выйти введите: 'Q': ")
+
+                if user_choice.upper() == 'ВГ':
+                    to = input('Кому отправить сообщение: ')
+                    if to not in room_names:
+                        a = input("Группа найдена не была, хотите создать группу с таким именем? (Y / N): ")
+                        if a.upper() == 'Y':
+                            room_names.append(to)
+                        else:
+                            continue
+                elif user_choice.upper() == 'П':
+                    to = input('Кому отправить сообщение: ')
                     message = input('Enter message: ')
                     if message.upper() == 'Q':
                         print('Выход из чата')
+                        message_send_room(s, to, 'q')
                         break
-                    if to[0].isalpha():
-                        message_send_user(s, to, message)
-                    else:
-                        message_send_room(s, to, message)
-                msg.join()
+                    message_send_user(s, to, message)
+                elif user_choice.upper() == 'Г':
+                    to = input('Кому отправить сообщение: ')
+                    message = input('Enter message: ')
+                    message_send_room(s, to, message)
+                elif user_choice.upper() == 'Q':
+                    message_dict = {
+                        'action': 'msg',
+                        'message': user_choice.upper()
+                    }
+                    s.send(pickle.dumps(message_dict))
+                    break
 
+            msg.join(timeout=1)
+
+            logout(s)
             quit_data = s.recv(1024)
             logger.info(pickle.loads(quit_data))
             usernames_auth.clear()

@@ -1,12 +1,3 @@
-# Функции сервера:
-#     - принимает сообщение клиента;
-#     - формирует ответ клиенту;
-#     - отправляет ответ клиенту;
-#     - имеет параметры командной строки:
-#         * -p <port> — TCP-порт для работы (по умолчанию использует 7777);
-#         * -a <addr> — IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
-
-
 from socket import socket, AF_INET, SOCK_STREAM
 import time
 import pickle
@@ -14,7 +5,6 @@ import logging
 from functools import wraps
 import datetime
 import select
-import multiprocessing
 
 logger = logging.getLogger('my_server')
 
@@ -111,6 +101,9 @@ def message_send(my_dict, sock):
             if my_dict['to'] == i:
                 msg_dict['response'] = 200
                 msg_dict['alert'] = dict_signals[msg_dict['response']]
+                msg_dict['message'] = my_dict['message']
+                msg_dict['to'] = my_dict['to']
+                msg_dict['from'] = my_dict['from']
                 print('message send!')
                 logger.info('message send!')
                 sock.send(pickle.dumps(msg_dict))
@@ -118,6 +111,9 @@ def message_send(my_dict, sock):
             else:
                 msg_dict['response'] = 404
                 msg_dict['alert'] = dict_signals[msg_dict['response']]
+                msg_dict['message'] = my_dict['message']
+                msg_dict['to'] = my_dict['to']
+                msg_dict['from'] = my_dict['from']
                 logger.info('пользователь/чат отсутствует на сервере')
                 sock.send(pickle.dumps(msg_dict))
                 return msg_dict
@@ -140,10 +136,7 @@ def message_room(my_dict, sock):
         return msg_dict
 
 
-def message_room_send(my_dict, w, sock):
-    if my_dict['message'].upper() == 'Q':
-        sock.send(pickle.dumps(my_dict))
-        return ''
+def message_room_send(my_dict, w):
     for val in w:
         val.send(pickle.dumps(my_dict))
     print('message send!')
@@ -200,11 +193,14 @@ def main():
                                 usernames_auth.remove(requests[sock]['user']['user_name'])
                                 break
                             presence_user(sock, sock)
-                            # requests.clear()
                         elif requests[sock]['action'] == 'msg':
-                            if requests[sock]['to'][0].isalpha():
-                                message_room_send(message_send(requests[sock], sock), w, sock)
-                            message_room_send(message_room(requests[sock], sock), w, sock)
+                            if requests[sock]['message'].upper() == 'Q':
+                                sock.send(pickle.dumps(requests[sock]))
+                            else:
+                                if requests[sock]['to'][0].isalpha():
+                                    message_send(requests[sock], sock)
+                                else:
+                                    message_room_send(message_room(requests[sock], sock), w)
                         elif requests[sock]['action'] == 'logout':
                             usernames_auth.remove(requests[sock]['from'])
                             sock.send(pickle.dumps({'action': 'quit'}))
