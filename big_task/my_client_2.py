@@ -132,7 +132,6 @@ def message_recv(s):
             break
         elif message_data_load['message'] == 'add_group':
             print('Сообщение от сервера: ', message_data_load, ', длиной ', len(message_data), ' байт')
-            # return ''
         else:
             if message_data_load['to'][0].isalpha():
                 print('Сообщение от сервера: ', message_data_load, ', длиной ', len(message_data), ' байт')
