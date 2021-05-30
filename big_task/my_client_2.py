@@ -126,16 +126,20 @@ def message_send_room(s, to, message):
 
 def message_recv(s):
     while True:
-        message_room_data = s.recv(1024)
-        message_room_data_load = pickle.loads(message_room_data)
-        if message_room_data_load['message'] == 'Q':
+        message_data = s.recv(1024)
+        message_data_load = pickle.loads(message_data)
+        if message_data_load['message'] == 'Q':
             break
-        if message_room_data_load['to'][0].isalpha():
-            print('Сообщение от сервера: ', message_room_data_load, ', длиной ', len(message_room_data), ' байт')
+        elif message_data_load['message'] == 'add_group':
+            print('Сообщение от сервера: ', message_data_load, ', длиной ', len(message_data), ' байт')
+            # return ''
         else:
-            print(
-                f'{message_room_data_load["to"]} from {message_room_data_load["from"]}: {message_room_data_load["message"]}')
-        logger.info(message_room_data_load)
+            if message_data_load['to'][0].isalpha():
+                print('Сообщение от сервера: ', message_data_load, ', длиной ', len(message_data), ' байт')
+            else:
+                print(
+                    f'{message_data_load["to"]} from {message_data_load["from"]}: {message_data_load["message"]}')
+        logger.info(message_data_load)
 
 
 def logout(s):
@@ -167,41 +171,39 @@ def main(s):
 
             user_presence(s)
 
-            msg = Thread(target=message_recv, args=(s,))
-            msg.start()
+
             while True:
+                msg = Thread(target=message_recv, args=(s,))
+                msg.start()
                 user_choice = input(
                     "Введите, что вы хотите сделать (П/Отправить сообщение пользователю, Г/Отправить группе, ВГ/Вступить в группу). Чтобы выйти введите: 'Q': ")
 
                 if user_choice.upper() == 'ВГ':
-                    to = input('Кому отправить сообщение: ')
+                    to = input('Введите имя группы (Ввод должен начинаться с #, Пример:#5556): ')
                     if to not in room_names:
                         a = input("Группа найдена не была, хотите создать группу с таким именем? (Y / N): ")
                         if a.upper() == 'Y':
                             room_names.append(to)
-                        else:
-                            continue
+                            s.send(pickle.dumps({'action': 'add_group', 'room_name': to}))
+                            msg.join(timeout=1)
                 elif user_choice.upper() == 'П':
                     to = input('Кому отправить сообщение: ')
                     message = input('Enter message: ')
-                    if message.upper() == 'Q':
-                        print('Выход из чата')
-                        message_send_room(s, to, 'q')
-                        break
                     message_send_user(s, to, message)
+                    msg.join(timeout=1)
                 elif user_choice.upper() == 'Г':
                     to = input('Кому отправить сообщение: ')
                     message = input('Enter message: ')
                     message_send_room(s, to, message)
+                    msg.join(timeout=1)
                 elif user_choice.upper() == 'Q':
                     message_dict = {
                         'action': 'msg',
                         'message': user_choice.upper()
                     }
                     s.send(pickle.dumps(message_dict))
+                    msg.join(timeout=1)
                     break
-
-            msg.join(timeout=1)
 
             logout(s)
             quit_data = s.recv(1024)

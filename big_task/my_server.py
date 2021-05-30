@@ -204,6 +204,10 @@ def main():
                         elif requests[sock]['action'] == 'logout':
                             usernames_auth.remove(requests[sock]['from'])
                             sock.send(pickle.dumps({'action': 'quit'}))
+                        elif requests[sock]['action'] == 'add_group':
+                            room_names.append(requests[sock]['room_name'])
+                            sock.send(pickle.dumps({'response': 200, 'alert': dict_signals[200], 'message': 'add_group'}))
+
 
 
 if __name__ == '__main__':
